@@ -1,6 +1,6 @@
 package controllers
 
-import (
+/*import (
 	"timeclock/database"
 	"timeclock/models"
 
@@ -10,7 +10,7 @@ import (
 	//"path"
 
 	"github.com/gorilla/mux"
-	//"github.com/gookit/goutil/dump"
+	"github.com/gookit/goutil/dump"
 )
 
 /*func getDataFromRequest(req *http.Request) (string, string) {
@@ -35,7 +35,7 @@ import (
     w.Header().Set("Content-type", "text/html")
     //w.Header().Set("Content-Type", "text/javascript")
     http.ServeFile(w, r, p)
-}*/
+}
 
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -74,13 +74,15 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
   	if err := models.DeleteUser(userId); err != nil {
   		fmt.Println(err)
   	}	
-}
+}*/
 
-func getUser(userID uint) models.User {
+/*func getUser(userID uint) (models.User, *database.ErrorResp) {
   var user models.User
   if err := database.Instance.First(&user, userID).Error; err != nil {
-    fmt.Println(err)
+  	errResponse := database.New(database.WithDetails(err))
+  	dump.P(errResponse)
+    return user, errResponse
   }
 
-  return user
-}
+  return user, nil
+}*/

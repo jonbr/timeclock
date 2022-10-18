@@ -3,7 +3,7 @@ package models
 import "time"
 
 type TimeRegister struct {
-  ID        uint        //`gorm:"primaryKey"`
+  ID        uint
   ClockIn   *time.Time
   ClockOut  *time.Time
   UserID    uint

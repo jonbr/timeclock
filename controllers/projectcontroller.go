@@ -1,44 +1,104 @@
 package controllers
 
 import (
-	"timeclock/database"
+	"timeclock/error"
 	"timeclock/models"
+	"timeclock/utils"
 
 	"fmt"
 	"encoding/json"
-	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/gookit/goutil/dump"
+	"gorm.io/gorm"
+	//"github.com/gookit/goutil/dump"
 )
 
+func GetProjects(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p := &models.Project{}
+	  	projects, err := p.GetProject(db)
+	  	if err != nil {
+	  		w.WriteHeader(http.StatusNotFound)
+	  		json.NewEncoder(w).Encode(err)
+	  		return
+	  	}
 
-func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	var project models.Project
-	json.NewDecoder(r.Body).Decode(&project)
-	dump.P(project)
-
-	userId := mux.Vars(r)["id"]
-	fmt.Println("userId: ", userId)
-	uintId, err := strconv.ParseUint(userId, 10, 32)
-  	if err != nil {
-		fmt.Printf("%T, %v\n", uintId, uintId)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(projects)
 	}
-  	user := getUser(uint(uintId))
-  	if (models.User{} == user) {
-    	fmt.Println("No User found, not possible to create a new project!")
-  	}
-  	if (!user.Administrator) {
-  		log.Println(fmt.Sprintf("UserId %s does not have sufficient privledges to create a project!", user.ID))
-  	}
+}
 
-  	project.UserID = uint(uintId)
 
-	database.Instance.Create(&project)
-	json.NewEncoder(w).Encode(project)
+func GetProject(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		tmpVar := mux.Vars(r)["id"]
+		fmt.Println("tmpVar: ", tmpVar)
+
+		projectId, err := utils.CastStringToUint(mux.Vars(r)["id"])
+		fmt.Println("projectId: ", projectId)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+	  		json.NewEncoder(w).Encode(err)
+	  		return
+		}
+
+	  	p := &models.Project{}
+	  	p.ID = projectId;
+	  	projects, errResp := p.GetProject(db)
+	  	if errResp != nil {
+	  		w.WriteHeader(http.StatusNotFound)
+	  		json.NewEncoder(w).Encode(errResp)
+	  		return
+	  	}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(projects)
+	}
+}
+
+func CreateProject(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("---CreateProject---")
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		
+		//var errResp *error.ErrorResp
+		var p models.Project
+		json.NewDecoder(r.Body).Decode(&p)
+
+		
+		//u.ID = utils.CastStringToUint(mux.Vars(r)["userId"])
+
+		userId, err := utils.CastStringToUint(mux.Vars(r)["userId"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+	  		json.NewEncoder(w).Encode(err)
+	  		return
+		}
+
+		u := &models.User{}
+		u.ID = userId
+	  	if errResp := u.GetUser(db); errResp != nil {
+  			w.WriteHeader(http.StatusNotFound)
+  			json.NewEncoder(w).Encode(errResp)
+  			return
+	  	} 
+	  	if !u.Administrator {
+  			w.WriteHeader(http.StatusUnauthorized)
+  			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User %s does not have sufficient privledges to create a project!", u.Name))))
+  			return
+  		}
+	  		
+  		p.UserID = uint(u.ID)
+  		if errResp := p.CreateProject(db); errResp != nil {
+  			w.WriteHeader(http.StatusInternalServerError)
+  			json.NewEncoder(w).Encode(errResp)
+  			return
+  		}
+
+  		w.WriteHeader(http.StatusOK)
+  		json.NewEncoder(w).Encode(p)
+	}
 }
