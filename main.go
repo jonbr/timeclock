@@ -8,9 +8,7 @@ import (
   "net/http"
 
   "github.com/gorilla/mux"
-  //"github.com/gookit/goutil/dump"
 )
-
 
 func main() {
   a := &app.App{}
@@ -20,7 +18,7 @@ func main() {
 
   // Initialize Database
   a.Connect(AppConfig.ConnectionString)
-  //a.Migrate()
+  a.Migrate()
 
   // Initialize the router
   a.Router = mux.NewRouter().StrictSlash(true)
@@ -32,4 +30,6 @@ func main() {
   // Start the server
   log.Println(fmt.Sprintf("Starting Server on port %s", AppConfig.Port))
   log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", AppConfig.Port), a.Router))
+
+  //logger.Log.Info("Info") // use the wrapper and public configured Logrus
 }

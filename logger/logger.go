@@ -1,26 +1,22 @@
 package logger
 
 import (
-	"fmt"
-    "log"
-    "net/http"
-    "time"
+	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
+var Log *logrus.Logger // share will all packages
 
-func Logger(inner http.Handler, name string) http.Handler {
-	fmt.Println("Logger")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+func init() {
+  Log = logrus.New()
+  // Log as JSON instead of the default ASCII formatter.
+  Log.SetFormatter(&logrus.TextFormatter{})
 
-		inner.ServeHTTP(w, r)
+  // Output to stdout instead of the default stderr
+  // Can be any io.Writer, see below for File example
+  Log.SetOutput(os.Stdout)
 
-		log.Printf(
-			"%s %s %s %s",
-			r.Method,
-			r.RequestURI,
-			name,
-			time.Since(start),
-		)
-	})
+  // Only log the warning severity or above.
+  Log.SetLevel(logrus.InfoLevel)
 }

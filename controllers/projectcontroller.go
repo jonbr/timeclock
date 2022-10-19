@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"timeclock/error"
+	"timeclock/logger"
 	"timeclock/models"
 	"timeclock/utils"
 
@@ -10,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	//"github.com/gookit/goutil/dump"
 )
@@ -24,6 +26,16 @@ func GetProjects(db *gorm.DB) http.HandlerFunc {
 	  		return
 	  	}
 
+	  	logger.Log.WithFields(logrus.Fields{
+	        "host":     r.URL.Host,
+	        "path":     r.URL.Path,
+	        "header":   r.Header,
+	        // as you can see, there is a lot the logger can do for us
+	        // however "body": r.Body will not work, and always log an empty string!
+	        //"body":     req
+	        // this is why we'll log our crated struct instead.
+	    }).Info()
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(projects)
 	}
@@ -34,11 +46,7 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		tmpVar := mux.Vars(r)["id"]
-		fmt.Println("tmpVar: ", tmpVar)
-
 		projectId, err := utils.CastStringToUint(mux.Vars(r)["id"])
-		fmt.Println("projectId: ", projectId)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 	  		json.NewEncoder(w).Encode(err)
@@ -53,6 +61,15 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 	  		json.NewEncoder(w).Encode(errResp)
 	  		return
 	  	}
+
+	  	logger.Log.WithFields(logrus.Fields{
+	        "host":     r.URL.Host,
+	        "path":     r.URL.Path,
+	        "header":   r.Header,
+	        // as you can see, there is a lot the logger can do for us
+	        // however "body": r.Body will not work, and always log an empty string!
+	        // this is why we'll log our crated struct instead.
+	    }).Info()
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(projects)
