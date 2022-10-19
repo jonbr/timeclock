@@ -1,14 +1,14 @@
 package controllers
 
 import (
+	"fmt"
+	"encoding/json"
+	"net/http"
+
 	"timeclock/error"
 	"timeclock/logger"
 	"timeclock/models"
 	"timeclock/utils"
-
-	"fmt"
-	"encoding/json"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -21,6 +21,7 @@ func GetProjects(db *gorm.DB) http.HandlerFunc {
 		p := &models.Project{}
 	  	projects, err := p.GetProject(db)
 	  	if err != nil {
+	  		logger.Log.Error(err)
 	  		w.WriteHeader(http.StatusNotFound)
 	  		json.NewEncoder(w).Encode(err)
 	  		return
@@ -41,13 +42,13 @@ func GetProjects(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-
 func GetProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		projectId, err := utils.CastStringToUint(mux.Vars(r)["id"])
 		if err != nil {
+			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 	  		json.NewEncoder(w).Encode(err)
 	  		return
@@ -117,5 +118,19 @@ func CreateProject(db *gorm.DB) http.HandlerFunc {
 
   		w.WriteHeader(http.StatusOK)
   		json.NewEncoder(w).Encode(p)
+	}
+}
+
+func UpdateProject(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func DeleteProject(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  		w.WriteHeader(http.StatusOK)
 	}
 }

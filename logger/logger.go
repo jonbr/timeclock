@@ -9,14 +9,14 @@ import (
 var Log *logrus.Logger // share will all packages
 
 func init() {
-  Log = logrus.New()
-  // Log as JSON instead of the default ASCII formatter.
-  Log.SetFormatter(&logrus.TextFormatter{})
+	Log = logrus.New()
+	// Log as JSON instead of the default ASCII formatter.
+	Log.SetFormatter(&logrus.TextFormatter{})
 
-  // Output to stdout instead of the default stderr
-  // Can be any io.Writer, see below for File example
-  Log.SetOutput(os.Stdout)
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	Log.SetOutput(os.Stdout)
 
-  // Only log the warning severity or above.
-  Log.SetLevel(logrus.InfoLevel)
+	// Only log the warning severity or above.
+	Log.SetLevel(logrus.InfoLevel)
 }

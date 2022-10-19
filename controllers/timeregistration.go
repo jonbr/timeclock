@@ -1,20 +1,29 @@
 package controllers
 
-/*import (
-	"timeclock/database"
-	"timeclock/models"
-
-	"fmt"
-	"time"
+import (
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
-func Timeregistrationclockin(w http.ResponseWriter, r *http.Request) {
+func Timeregistrationclockin(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func Timeregistrationclockout(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+/*func Timeregistrationclockin(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
   	// get user
-  	var err *error.ErrorResp
+  	/*var err *error.ErrorResp
   	var user models.User
   	//var users []models.User
   	userId := mux.Vars(r)["id"] // string
@@ -33,9 +42,5 @@ func Timeregistrationclockin(w http.ResponseWriter, r *http.Request) {
 
   	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   	w.WriteHeader(http.StatusOK)
-}
-
-func Timeregistrationclockout(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+  }
 }*/
