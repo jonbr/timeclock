@@ -1,14 +1,24 @@
 package utils
 
 import (
+	//"fmt"
 	"strconv"
+
+	"github.com/gookit/goutil/dump"
 )
 
-func CastStringToUint(ID string) (uint, error) {
-	uintId, err := strconv.ParseUint(ID, 10, 32)
-	if err != nil {
-		return 0, err
+func CastStringToUint(pathParams map[string]string) ([]uint, error) {
+	var paramsToUint []uint
+	for _, value := range pathParams {
+		u64, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		
+		paramsToUint = append(paramsToUint, uint(u64))
 	}
 
-	return uint(uintId), nil
+	dump.P(paramsToUint)
+
+	return paramsToUint, nil
 }

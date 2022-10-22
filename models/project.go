@@ -2,6 +2,8 @@ package models
 
 
 import (
+	"fmt"
+
 	"timeclock/error"
 
 	"gorm.io/gorm"
@@ -21,14 +23,14 @@ func (p *Project) GetProject(db *gorm.DB) ([]Project, *error.ErrorResp) {
 	var errResponse *error.ErrorResp
 
 	if p.ID != 0 {
+		fmt.Println("p.ID: ", p.ID)
 		if err := db.First(&projects, p.ID).Error; err != nil {
 			errResponse = error.New(error.WithDetails(err))
-			return projects, errResponse
 		}
-	}
-	if result := db.Find(&projects); result.Error != nil {
-		errResponse = error.New(error.WithDetails(result.Error))
-		return projects, errResponse
+	} else {
+		if result := db.Find(&projects); result.Error != nil {
+			errResponse = error.New(error.WithDetails(result.Error))
+		}
 	}
 
 	return projects, errResponse

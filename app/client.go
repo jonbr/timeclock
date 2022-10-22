@@ -32,20 +32,20 @@ func (a *App) Migrate() {
 }
 
 func (a *App) InitializeRoutes() {
-	a.Router.Handle("/user/", controllers.GetProjects(a.DB)).Methods("GET")
-	a.Router.Handle("/user/{id}", controllers.GetProject(a.DB)).Methods("GET")
-	a.Router.Handle("/user/", controllers.CreateProject(a.DB)).Methods("POST")
-	a.Router.Handle("/user/{id}", controllers.UpdateProject(a.DB)).Methods("PUT")
-	a.Router.Handle("/user/{id}", controllers.DeleteProject(a.DB)).Methods("DELETE")
+	a.Router.Handle("/user/", controllers.GetUsers(a.DB)).Methods("GET")
+	a.Router.Handle("/user/{id}", controllers.GetUser(a.DB)).Methods("GET")
+	a.Router.Handle("/user/", controllers.CreateUser(a.DB)).Methods("POST")
+	a.Router.Handle("/user/{id}", controllers.UpdateUser(a.DB)).Methods("PUT")
+	a.Router.Handle("/user/{id}", controllers.DeleteUser(a.DB)).Methods("DELETE")
 
-	/*a.Router.Handle("/project/", controllers.GetProjects(a.DB)).Methods("GET")
-	a.Router.Handle("/project/{id}", controllers.GetProject(a.DB)).Methods("GET")
+	a.Router.Handle("/user/{userId}/project/", controllers.GetProjects(a.DB)).Methods("GET")
+	a.Router.Handle("/user/{userId}/project/{projectId}", controllers.GetProject(a.DB)).Methods("GET")
 	a.Router.Handle("/project/", controllers.CreateProject(a.DB)).Methods("POST")
 	a.Router.Handle("/project/{id}", controllers.UpdateProject(a.DB)).Methods("PUT")
-	a.Router.Handle("/project/{id}", controllers.DeleteProject(a.DB)).Methods("DELETE")*/
+	a.Router.Handle("/project/{id}", controllers.DeleteProject(a.DB)).Methods("DELETE")
 
-	a.Router.Handle("/timeregistration/clockin/{userId}", controllers.Timeregistrationclockin(a.DB)).Methods("POST")
-  	a.Router.Handle("/timeregistration/clockin/{userId}", controllers.Timeregistrationclockout(a.DB)).Methods("POST")
+	a.Router.Handle("/timeregistration/clockin/{userId}", controllers.TimeRegistrationClockIn(a.DB)).Methods("POST")
+  	a.Router.Handle("/timeregistration/clockout/{userId}", controllers.TimeRegistrationClockOut(a.DB)).Methods("POST")
 
 	/*a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
 	a.Router.HandleFunc("/product", a.createProduct).Methods("POST")

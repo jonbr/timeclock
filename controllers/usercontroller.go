@@ -1,88 +1,107 @@
 package controllers
 
-/*import (
-	"timeclock/database"
-	"timeclock/models"
-
-	"fmt"
+import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	//"path"
 
-	"github.com/gorilla/mux"
-	"github.com/gookit/goutil/dump"
+	"timeclock/error"
+	"timeclock/logger"
+	"timeclock/models"
+	//"timeclock/utils"
+
+	//"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
-/*func getDataFromRequest(req *http.Request) (string, string) {
-   // Extract the user-provided data for the new clichePair
-   req.ParseForm()
-   form := req.Form
-   cliche := form["cliche"][0]    // 1st and only member of a list
-   counter := form["counter"][0]  // ditto
-   return cliche, counter
-}*/
 
-// serves index file
-/*func Home(w http.ResponseWriter, r *http.Request) {
-		//var newVar := json.NewDecoder(r.Body).Decode("btn")
-
-		dump.P(r.Form())
-		//fmt.Println("index: ", index)
-    //r.NewRoute().PathPrefix("./web/")
-    //r.PathPrefix("./web/")//.Handler(http.FileServer(http.Dir("./web/")))
-    p := path.Dir("./web/")
-    // set header
-    w.Header().Set("Content-type", "text/html")
-    //w.Header().Set("Content-Type", "text/javascript")
-    http.ServeFile(w, r, p)
-}
-
-func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
-
-	database.Instance.Create(&user)
-	json.NewEncoder(w).Encode(user)
-}
-
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	var users []models.User
-	userId := mux.Vars(r)["id"]
-	if userId != "" {
-		if err := database.Instance.First(&user, userId).Error; err != nil {
-    		fmt.Println(err)
-    		return
-  		}
-  		json.NewEncoder(w).Encode(user)
-	} else {
-		result := database.Instance.Find(&users)
-		if result.Error != nil {
-			fmt.Println(result.Error)
+func GetUsers(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u := &models.User{}
+		users, err := u.GetUsers(db)
+		if err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(err)
+			return
 		}
+
+		if !u.Administrator {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User %s does not have sufficient privledges to create a project!", u.Name))))
+			return
+		}
+
+		logger.Log.WithFields(logrus.Fields{
+			"host":     r.URL.Host,
+			"path":     r.URL.Path,
+			"header":   r.Header,
+			// as you can see, there is a lot the logger can do for us
+			// however "body": r.Body will not work, and always log an empty string!
+			//"body":     req
+			// this is why we'll log our crated struct instead.
+		}).Info()
+
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(users)
 	}
-
-  	w.Header().Set("Content-Type", "application/json")
 }
 
-func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	userId := mux.Vars(r)["id"]
+func GetUser(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		/*userId, err := utils.CastStringToUint(mux.Vars(r)["id"])
+		if err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(err)
+			return
+		}
 
-  	if err := models.DeleteUser(userId); err != nil {
-  		fmt.Println(err)
-  	}	
-}*/
+		fmt.Println("userId: ", userId)*/
 
-/*func getUser(userID uint) (models.User, *database.ErrorResp) {
-  var user models.User
-  if err := database.Instance.First(&user, userID).Error; err != nil {
-  	errResponse := database.New(database.WithDetails(err))
-  	dump.P(errResponse)
-    return user, errResponse
-  }
+		u := &models.User{}
+		u.ID = 2 //userId
+		if errResp := u.GetUser(db); errResp != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
 
-  return user, nil
-}*/
+		logger.Log.WithFields(logrus.Fields{
+			"host":     r.URL.Host,
+			"path":     r.URL.Path,
+			"header":   r.Header,
+			// as you can see, there is a lot the logger can do for us
+			// however "body": r.Body will not work, and always log an empty string!
+			//"body":     req
+			// this is why we'll log our crated struct instead.
+		}).Info()
+
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(u)
+	}
+}
+
+func CreateUser(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func UpdateUser(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func DeleteUser(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}
+}

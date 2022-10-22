@@ -6,14 +6,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func Timeregistrationclockin(db *gorm.DB) http.HandlerFunc {
+func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func Timeregistrationclockout(db *gorm.DB) http.HandlerFunc {
+func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
