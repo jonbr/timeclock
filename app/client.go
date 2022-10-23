@@ -32,9 +32,9 @@ func (a *App) Migrate() {
 }
 
 func (a *App) InitializeRoutes() {
-	a.Router.Handle("/user/", controllers.GetUsers(a.DB)).Methods("GET")
+	a.Router.Handle("/user", controllers.GetUsers(a.DB)).Methods("GET")
 	a.Router.Handle("/user/{id}", controllers.GetUser(a.DB)).Methods("GET")
-	a.Router.Handle("/user/", controllers.CreateUser(a.DB)).Methods("POST")
+	a.Router.Handle("/user", controllers.CreateUser(a.DB)).Methods("POST")
 	a.Router.Handle("/user/{id}", controllers.UpdateUser(a.DB)).Methods("PUT")
 	a.Router.Handle("/user/{id}", controllers.DeleteUser(a.DB)).Methods("DELETE")
 
@@ -44,7 +44,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/project/{id}", controllers.UpdateProject(a.DB)).Methods("PUT")
 	a.Router.Handle("/project/{id}", controllers.DeleteProject(a.DB)).Methods("DELETE")
 
-	a.Router.Handle("/timeregistration/clockin/{userId}", controllers.TimeRegistrationClockIn(a.DB)).Methods("POST")
+	a.Router.Handle("/timeregistration/clockin/user/{userId}/project/{projectId}", controllers.TimeRegistrationClockIn(a.DB)).Methods("POST")
   	a.Router.Handle("/timeregistration/clockout/{userId}", controllers.TimeRegistrationClockOut(a.DB)).Methods("POST")
 
 	/*a.Router.HandleFunc("/products", a.getProducts).Methods("GET")

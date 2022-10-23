@@ -1,14 +1,30 @@
 package controllers
 
 import (
+	"fmt"
+	"encoding/json"
 	"net/http"
 
+	"timeclock/logger"
+	"timeclock/utils"
+
+	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		uintParams, err := utils.CastStringToUint(mux.Vars(r))
+		if err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+		fmt.Println("uintParams:", uintParams)
+
 		w.WriteHeader(http.StatusOK)
 	}
 }

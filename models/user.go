@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"timeclock/error"
+	"timeclock/logger"
 
 	"gorm.io/gorm"
 	"github.com/gookit/goutil/dump"
@@ -10,8 +11,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Name          string
-	Administrator bool
+	Name          	string `json:"name" gorm:"not null"`
+	Username 		string `json:"username" gorm:"unique"`
+	Email 			string `json:"email" gorm:"unique"`
+	Password 		string `json:"password"`
+	Administrator 	bool   `json:"administrator"`
 }
 
 
@@ -35,6 +39,16 @@ func (u *User) GetUsers(db *gorm.DB) ([]User, *error.ErrorResp) {
 	}
 
 	return users, errResponse
+}
+
+func (u *User) CreateUser(db *gorm.DB) *error.ErrorResp {
+	if result := db.Create(&u); result.Error != nil {
+		logger.Log.Error(result.Error)
+		return error.New(error.WithDetails(result.Error))
+	}
+
+
+	return nil
 }
 
 /*func DeleteUser(userId string) error {
