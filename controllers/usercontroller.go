@@ -17,6 +17,43 @@ import (
 )
 
 
+func RegisterUser(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var user models.User
+
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
+			return
+		}
+		if err := user.HashPassword(user.Password); err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
+			return
+		}
+		if errResp := user.CreateUser(db); errResp != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
+		
+		logger.Log.WithFields(logrus.Fields{
+			"host":     r.URL.Host,
+			"path":     r.URL.Path,
+			"header":   r.Header,
+			// as you can see, there is a lot the logger can do for us
+			// however "body": r.Body will not work, and always log an empty string!
+			//"body":     req
+			// this is why we'll log our crated struct instead.
+		}).Info(user)
+
+		json.NewEncoder(w).Encode(user)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 func GetUsers(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u := &models.User{}

@@ -1,10 +1,10 @@
 package models
 
 import (
-	"fmt"
-	"timeclock/error"
+	apiError "timeclock/error"
 	"timeclock/logger"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"github.com/gookit/goutil/dump"
 )
@@ -19,35 +19,51 @@ type User struct {
 }
 
 
-func (u *User) GetUser(db *gorm.DB) *error.ErrorResp {
-	fmt.Println("---GetUser---")
+func (u *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
 	dump.P(u.ID)
 	if err := db.First(&u, u.ID).Error; err != nil {
-		errResponse := error.New(error.WithDetails(err))
+		errResponse := apiError.New(apiError.WithDetails(err))
 		return errResponse
 	}
 
 	return nil
 }
 
-func (u *User) GetUsers(db *gorm.DB) ([]User, *error.ErrorResp) {
+func (u *User) GetUsers(db *gorm.DB) ([]User, *apiError.ErrorResp) {
 	var users []User
-	var errResponse *error.ErrorResp
+	var errResponse *apiError.ErrorResp
 
 	if result := db.Find(&users); result.Error != nil {
-		errResponse = error.New(error.WithDetails(result.Error))
+		errResponse = apiError.New(apiError.WithDetails(result.Error))
 	}
 
 	return users, errResponse
 }
 
-func (u *User) CreateUser(db *gorm.DB) *error.ErrorResp {
+func (u *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
 	if result := db.Create(&u); result.Error != nil {
 		logger.Log.Error(result.Error)
-		return error.New(error.WithDetails(result.Error))
+		return apiError.New(apiError.WithDetails(result.Error))
 	}
 
 
+	return nil
+}
+
+func (user *User) HashPassword(password string) error {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		return err
+	}
+	user.Password = string(bytes)
+	return nil
+}
+
+func (user *User) CheckPassword(providedPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(providedPassword))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

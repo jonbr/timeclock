@@ -16,6 +16,7 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
+		// first parm is userId, second is projectId
 		uintParams, err := utils.CastStringToUint(mux.Vars(r))
 		if err != nil {
 			logger.Log.Error(err)
@@ -24,6 +25,8 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 		fmt.Println("uintParams:", uintParams)
+
+		
 
 		w.WriteHeader(http.StatusOK)
 	}
