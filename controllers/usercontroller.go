@@ -17,8 +17,10 @@ import (
 )
 
 
+// TODO: merge RegisterUser and CreateUser into one function.
 func RegisterUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		var user models.User
 
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -56,6 +58,7 @@ func RegisterUser(db *gorm.DB) http.HandlerFunc {
 
 func GetUsers(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		u := &models.User{}
 		users, err := u.GetUsers(db)
 		if err != nil {
@@ -81,7 +84,6 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
 			// this is why we'll log our crated struct instead.
 		}).Info()
 
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(users)
 	}
@@ -89,6 +91,7 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
 
 func GetUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		/*userId, err := utils.CastStringToUint(mux.Vars(r)["id"])
 		if err != nil {
 			logger.Log.Error(err)
@@ -117,7 +120,6 @@ func GetUser(db *gorm.DB) http.HandlerFunc {
 			// this is why we'll log our crated struct instead.
 		}).Info()
 
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(u)
 	}

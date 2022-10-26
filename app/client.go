@@ -2,6 +2,7 @@ package app
 
 import (
 	"timeclock/controllers"
+	"timeclock/middlewares"
 	"timeclock/models"
 
 	"log"
@@ -32,6 +33,8 @@ func (a *App) Migrate() {
 }
 
 func (a *App) InitializeRoutes() {
+	a.Router.Handle("/token", controllers.GenerateToken(a.DB)).Methods("POST")
+
 	a.Router.Handle("/user/register", controllers.RegisterUser(a.DB)).Methods("POST")
 
 	a.Router.Handle("/user", controllers.GetUsers(a.DB)).Methods("GET")
@@ -49,6 +52,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/clockin/user/{userId}/project/{projectId}", controllers.TimeRegistrationClockIn(a.DB)).Methods("POST")
   	a.Router.Handle("/timeregistration/clockout/{userId}", controllers.TimeRegistrationClockOut(a.DB)).Methods("POST")
 
+  	a.Router.Use(middlewares.Auth)
 	/*a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
 	a.Router.HandleFunc("/product", a.createProduct).Methods("POST")
 	a.Router.HandleFunc("/product/{id:[0-9]+}", a.getProduct).Methods("GET")

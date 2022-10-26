@@ -40,6 +40,15 @@ func (u *User) GetUsers(db *gorm.DB) ([]User, *apiError.ErrorResp) {
 	return users, errResponse
 }
 
+func (user *User) GetUserByEmail(db *gorm.DB, email string) *apiError.ErrorResp {
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		errResponse := apiError.New(apiError.WithDetails(err))
+		return errResponse
+	}
+
+	return nil
+}
+
 func (u *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
 	if result := db.Create(&u); result.Error != nil {
 		logger.Log.Error(result.Error)
@@ -59,10 +68,10 @@ func (user *User) HashPassword(password string) error {
 	return nil
 }
 
-func (user *User) CheckPassword(providedPassword string) error {
+func (user *User) CheckPassword(providedPassword string) *apiError.ErrorResp {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(providedPassword))
 	if err != nil {
-		return err
+		return apiError.New(apiError.WithDetails(err))
 	}
 	return nil
 }

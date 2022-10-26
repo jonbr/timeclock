@@ -83,6 +83,7 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+// TODO: need to review and finish function.
 func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("---CreateProject---")
