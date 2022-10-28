@@ -17,9 +17,25 @@ import (
 )
 
 
+func GetAll(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		user := &models.User{}
+		users, err := user.GetAll(db)
+		if err != nil {
+			fmt.Println(err)
+		} 
+
+		json.NewEncoder(w).Encode(users)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 // TODO: merge RegisterUser and CreateUser into one function.
 func RegisterUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("---RegisterUser---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		var user models.User
 

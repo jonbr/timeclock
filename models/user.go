@@ -11,17 +11,33 @@ import (
 
 type User struct {
 	gorm.Model
-	Name          	string `json:"name" gorm:"not null"`
-	Username 		string `json:"username" gorm:"unique"`
-	Email 			string `json:"email" gorm:"unique"`
-	Password 		string `json:"password"`
-	Administrator 	bool   `json:"administrator"`
+	Name          	string 		`json:"name" gorm:"not null"`
+	Username 		string 		`json:"username" gorm:"unique"`
+	Email 			string 		`json:"email" gorm:"unique"`
+	Password 		string 		`json:"password"`
+	Administrator 	bool   		`json:"administrator"`
+	Projects 		[]Project 	`json:"projects" gorm:"many2many:user_Projects;"`
 }
 
+func (user *User) GetAll(db *gorm.DB) ([]User, error) {
+    var users []User
+    err := db.Model(&User{}).Preload("Projects").Find(&users).Error
+    return users, err
+}
+
+func (u *User) GetUserNew(db *gorm.DB) error {
+	dump.P(u.ID)
+	if err := db.First(&u, u.ID).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (u *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
 	dump.P(u.ID)
 	if err := db.First(&u, u.ID).Error; err != nil {
+		dump.P(err)
 		errResponse := apiError.New(apiError.WithDetails(err))
 		return errResponse
 	}

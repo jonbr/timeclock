@@ -12,10 +12,8 @@ import (
 
 type Project struct {
 	gorm.Model
-	Name 		string
-	Description string 
-	UserID    	uint
-	User      	User
+	Name 		string `json:"name" gorm:"unique"`
+	Description string `json:"description"`
 }
 
 func (p *Project) GetProject(db *gorm.DB) ([]Project, *error.ErrorResp) {

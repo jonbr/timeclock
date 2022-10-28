@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"net/http"
+	//"strconv"
 
 	"timeclock/error"
 	"timeclock/logger"
@@ -48,10 +49,6 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 
 		dump.P(mux.Vars(r))
 		uintParams, err := utils.CastStringToUint(mux.Vars(r))
-		//userId, err := utils.CastStringToUint(mux.Vars(r)["userId"])
-		//projectId, err := utils.CastStringToUint(mux.Vars(r)["projectId"])
-		//fmt.Println("userId: ", userId)
-		//fmt.Println("projectId: ", projectId)
 
 		if err != nil {
 			logger.Log.Error(err)
@@ -83,45 +80,44 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// TODO: need to review and finish function.
+// TODO: use as reference for logging!	
 func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("---CreateProject---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		
-		//var errResp *error.ErrorResp
 		var p models.Project
 		json.NewDecoder(r.Body).Decode(&p)
 
-		
-		//u.ID = utils.CastStringToUint(mux.Vars(r)["userId"])
-
-		/*userId, err := utils.CastStringToUint(mux.Vars(r)["id"])
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(err)
+		u := &models.User{}
+		//u.ID = p.UserID
+		/*if errResp := u.GetUser(db); errResp != nil {
+			logger.Log.Error(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(p.UserID), 10)))
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(p.UserID), 10)))))
 			return
 		}*/
-
-		u := &models.User{}
-		u.ID = 2 //userId
-		if errResp := u.GetUser(db); errResp != nil {
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(errResp)
-			return
-		} 
 		if !u.Administrator {
+			logger.Log.Error(fmt.Sprintf("User %s does not have sufficient privledges to create a project!", u.Name))
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User %s does not have sufficient privledges to create a project!", u.Name))))
 			return
 		}
 			
-		p.UserID = uint(u.ID)
+		//p.UserID = uint(u.ID)
 		if errResp := p.CreateProject(db); errResp != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(errResp)
 			return
 		}
+
+		logger.Log.WithFields(logrus.Fields{
+			"host":     r.URL.Host,
+			"path":     r.URL.Path,
+			"header":   r.Header,
+			// as you can see, there is a lot the logger can do for us
+			// however "body": r.Body will not work, and always log an empty string!
+			//"body":     req
+			// this is why we'll log our crated struct instead.
+		}).Info(p)
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(p)
