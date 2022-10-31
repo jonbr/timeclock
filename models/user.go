@@ -14,7 +14,6 @@ import (
 )
 
 type User struct {
-	//ID uint `json:"id"`
 	gorm.Model
 	Name          string    `json:"name" gorm:"not null"`
 	Username      string    `json:"username" gorm:"unique"`

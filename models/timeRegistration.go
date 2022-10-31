@@ -7,11 +7,9 @@ import (
 	"time"
 
 	apiError "timeclock/error"
-	//"timeclock/error"
 	"timeclock/logger"
 
 	"gorm.io/gorm"
-	//"github.com/gookit/goutil/dump"
 )
 
 type TimeRegister struct {

@@ -41,6 +41,9 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/user/{id}", controllers.UpdateUser(a.DB)).Methods("PUT")
 	a.Router.Handle("/user/{id}", controllers.DeleteUser(a.DB)).Methods("DELETE")
 
+	a.Router.Handle("/project", controllers.GetProjects(a.DB)).Methods("GET")
+	a.Router.Handle("/project/{id}", controllers.GetProject(a.DB)).Methods("GET")
+	
 	a.Router.Handle("/project/", controllers.CreateProject(a.DB)).Methods("POST")
 	a.Router.Handle("/project/{id}", controllers.UpdateProject(a.DB)).Methods("PUT")
 	a.Router.Handle("/project/{id}", controllers.DeleteProject(a.DB)).Methods("DELETE")

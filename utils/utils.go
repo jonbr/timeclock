@@ -1,11 +1,11 @@
 package utils
 
 import (
-	//"fmt"
 	"strconv"
-	//"github.com/gookit/goutil/dump"
 )
 
+// CastStringToUint takes in map parameters as strings and returns
+// there uint representation as a slice.
 func CastStringToUint(pathParams map[string]string) ([]uint, error) {
 	var paramsToUint []uint
 	for _, value := range pathParams {
@@ -16,8 +16,6 @@ func CastStringToUint(pathParams map[string]string) ([]uint, error) {
 
 		paramsToUint = append(paramsToUint, uint(u64))
 	}
-
-	//dump.P(paramsToUint)
 
 	return paramsToUint, nil
 }

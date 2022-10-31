@@ -59,7 +59,7 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 		}
 
 		p := &models.Project{}
-		p.ID = uintParams[1]
+		p.ID = uintParams[0]
 		projects, errResp := p.GetProject(db)
 		if errResp != nil {
 			w.WriteHeader(http.StatusNotFound)
