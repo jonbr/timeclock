@@ -1,32 +1,48 @@
 package controllers
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
+	"timeclock/auth"
+	"timeclock/error"
 	"timeclock/logger"
-	"timeclock/utils"
+	"timeclock/models"
 
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("---TimeRegistrationClockIn---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		tokenString := r.Header.Get("Authorization")
 
-		// first parm is userId, second is projectId
-		uintParams, err := utils.CastStringToUint(mux.Vars(r))
-		if err != nil {
-			logger.Log.Error(err)
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(err)
+		u := &models.User{}
+		u.Email, _ = auth.ValidateToken(tokenString)
+		if errResp := u.GetUserByEmail(db); errResp != nil {
+			logger.Log.Error(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))))
 			return
 		}
-		fmt.Println("uintParams:", uintParams)
 
-		
+		var tr models.TimeRegister
+		if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
+			return
+		}
+		tr.UserID = u.ID
+
+		if errResp := tr.ClockIn(db); errResp != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -34,32 +50,34 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 
 func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("---TimeRegistrationClockOut---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		tokenString := r.Header.Get("Authorization")
+
+		u := &models.User{}
+		u.Email, _ = auth.ValidateToken(tokenString)
+		if errResp := u.GetUserByEmail(db); errResp != nil {
+			logger.Log.Error(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))))
+			return
+		}
+
+		var tr models.TimeRegister
+		if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
+			return
+		}
+		tr.UserID = u.ID
+
+		if errResp := tr.ClockOut(db); errResp != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
 	}
 }
-
-/*func Timeregistrationclockin(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-  	// get user
-  	/*var err *error.ErrorResp
-  	var user models.User
-  	//var users []models.User
-  	userId := mux.Vars(r)["id"] // string
-  	uintId, err_new := strconv.ParseUint(userId, 10, 32)
-  	if err_new != nil {
-		fmt.Printf("%T, %v\n", uintId, uintId)
-	}
-  	user, err = getUser(uint(uintId))
-  	if (models.User{} == user) {
-    	fmt.Println("No User found, not possible to clockIn!")
-    	fmt.Println(err)
-  	}
-  	// create clockIn record
-  	var timeStamp = time.Now()
-  	database.Instance.Create(&models.TimeRegister{ClockIn: &timeStamp, UserID: uint(uintId)})
-
-  	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-  	w.WriteHeader(http.StatusOK)
-  }
-}*/

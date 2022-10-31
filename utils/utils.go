@@ -3,8 +3,7 @@ package utils
 import (
 	//"fmt"
 	"strconv"
-
-	"github.com/gookit/goutil/dump"
+	//"github.com/gookit/goutil/dump"
 )
 
 func CastStringToUint(pathParams map[string]string) ([]uint, error) {
@@ -14,11 +13,11 @@ func CastStringToUint(pathParams map[string]string) ([]uint, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		paramsToUint = append(paramsToUint, uint(u64))
 	}
 
-	dump.P(paramsToUint)
+	//dump.P(paramsToUint)
 
 	return paramsToUint, nil
 }

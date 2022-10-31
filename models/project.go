@@ -1,6 +1,5 @@
 package models
 
-
 import (
 	"fmt"
 
@@ -9,10 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-
 type Project struct {
 	gorm.Model
-	Name 		string `json:"name" gorm:"unique"`
+	Name        string `json:"name" gorm:"unique"`
 	Description string `json:"description"`
 }
 

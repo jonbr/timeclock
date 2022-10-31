@@ -4,11 +4,10 @@ import (
 	"net/http"
 )
 
-
 // Error defines standard error types of rk style
 type Error struct {
-	Code    int           `json:"code"`       // Code represent codes in response
-	Status  string        `json:"status"`   // Status represent string value of code
+	Code    int           `json:"code"`    // Code represent codes in response
+	Status  string        `json:"status"`  // Status represent string value of code
 	Message string        `json:"message"` // Message represent detail message
 	Details []interface{} `json:"details"` // Details is a list of details in any types in string
 }
@@ -18,7 +17,7 @@ type Option func(*ErrorResp)
 
 // ErrorResp is standard rk style error
 type ErrorResp struct {
-	Err *Error  // Err is RK style error type
+	Err *Error // Err is RK style error type
 }
 
 func New(opts ...Option) *ErrorResp {
