@@ -33,10 +33,6 @@ func GetProjects(db *gorm.DB) http.HandlerFunc {
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,
 			"header": r.Header,
-			// as you can see, there is a lot the logger can do for us
-			// however "body": r.Body will not work, and always log an empty string!
-			//"body":     req
-			// this is why we'll log our crated struct instead.
 		}).Info()
 
 		w.WriteHeader(http.StatusOK)
@@ -61,6 +57,7 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 		p := &models.Project{}
 		p.ID = uintParams[0]
 		projects, errResp := p.GetProject(db)
+		//dump.P(projects)
 		if errResp != nil {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(errResp)
@@ -71,9 +68,6 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,
 			"header": r.Header,
-			// as you can see, there is a lot the logger can do for us
-			// however "body": r.Body will not work, and always log an empty string!
-			// this is why we'll log our crated struct instead.
 		}).Info()
 
 		w.WriteHeader(http.StatusOK)
@@ -85,8 +79,8 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		
 		tokenString := r.Header.Get("Authorization")
-
 		var p models.Project
 		json.NewDecoder(r.Body).Decode(&p)
 
@@ -115,10 +109,6 @@ func CreateProject(db *gorm.DB) http.HandlerFunc {
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,
 			"header": r.Header,
-			// as you can see, there is a lot the logger can do for us
-			// however "body": r.Body will not work, and always log an empty string!
-			//"body":     req
-			// this is why we'll log our crated struct instead.
 		}).Info(p)
 
 		w.WriteHeader(http.StatusOK)

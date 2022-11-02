@@ -74,7 +74,6 @@ func (u *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
 }
 
 func (user *User) UpdateUser(db *gorm.DB) *apiError.ErrorResp {
-	fmt.Println("---models.UpdateUser---")
 	if err := db.Model(user).Updates(user); err != nil {
 		logger.Log.Error(err)
 		return apiError.New(apiError.WithDetails(err))

@@ -16,10 +16,9 @@ import (
 
 func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("---TimeRegistrationClockIn---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		tokenString := r.Header.Get("Authorization")
 
+		tokenString := r.Header.Get("Authorization")
 		u := &models.User{}
 		u.Email, _ = auth.ValidateToken(tokenString)
 		if errResp := u.GetUserByEmail(db); errResp != nil {
@@ -50,10 +49,9 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 
 func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("---TimeRegistrationClockOut---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		
 		tokenString := r.Header.Get("Authorization")
-
 		u := &models.User{}
 		u.Email, _ = auth.ValidateToken(tokenString)
 		if errResp := u.GetUserByEmail(db); errResp != nil {

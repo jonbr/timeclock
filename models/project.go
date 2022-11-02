@@ -10,6 +10,7 @@ import (
 
 type Project struct {
 	gorm.Model
+	ID 			uint
 	Name        string `json:"name" gorm:"unique"`
 	Description string `json:"description"`
 }

@@ -19,6 +19,7 @@ import (
 func GetUsers(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		
 		user := &models.User{}
 		users, err := user.GetUsers(db)
 		if err != nil {
@@ -32,10 +33,6 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,
 			"header": r.Header,
-			// as you can see, there is a lot the logger can do for us
-			// however "body": r.Body will not work, and always log an empty string!
-			//"body":     req
-			// this is why we'll log our crated struct instead.
 		}).Info()
 
 		w.WriteHeader(http.StatusOK)
@@ -46,6 +43,7 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
 func GetUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		
 		userId, err := utils.CastStringToUint(mux.Vars(r))
 		if err != nil {
 			logger.Log.Error(err)
@@ -66,10 +64,6 @@ func GetUser(db *gorm.DB) http.HandlerFunc {
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,
 			"header": r.Header,
-			// as you can see, there is a lot the logger can do for us
-			// however "body": r.Body will not work, and always log an empty string!
-			//"body":     req
-			// this is why we'll log our crated struct instead.
 		}).Info()
 
 		w.WriteHeader(http.StatusOK)
@@ -104,10 +98,6 @@ func CreateUser(db *gorm.DB) http.HandlerFunc {
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,
 			"header": r.Header,
-			// as you can see, there is a lot the logger can do for us
-			// however "body": r.Body will not work, and always log an empty string!
-			//"body":     req
-			// this is why we'll log our crated struct instead.
 		}).Info(user)
 
 		json.NewEncoder(w).Encode(user)

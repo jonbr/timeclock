@@ -19,7 +19,7 @@ type TimeRegister struct {
 	TimeDurationInMinutes float64
 	UserID                uint `gorm:"not null"`
 	User                  User
-	ProjectID             uint `json:"projectID" gorm:"not null"`
+	ProjectID             uint `gorm:"not null"`
 	Project               Project
 }
 
