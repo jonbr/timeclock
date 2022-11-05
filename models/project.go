@@ -10,18 +10,17 @@ import (
 
 type Project struct {
 	gorm.Model
-	ID 			uint
 	Name        string `json:"name" gorm:"unique"`
 	Description string `json:"description"`
 }
 
-func (p *Project) GetProject(db *gorm.DB) ([]Project, *error.ErrorResp) {
+func (project *Project) GetProject(db *gorm.DB) ([]Project, *error.ErrorResp) {
 	var projects []Project
 	var errResponse *error.ErrorResp
 
-	if p.ID != 0 {
-		fmt.Println("p.ID: ", p.ID)
-		if err := db.First(&projects, p.ID).Error; err != nil {
+	if project.ID != 0 {
+		fmt.Println("project.ID: ", project.ID)
+		if err := db.First(&projects, project.ID).Error; err != nil {
 			errResponse = error.New(error.WithDetails(err))
 		}
 	} else {
@@ -33,8 +32,8 @@ func (p *Project) GetProject(db *gorm.DB) ([]Project, *error.ErrorResp) {
 	return projects, errResponse
 }
 
-func (p *Project) CreateProject(db *gorm.DB) *error.ErrorResp {
-	if err := db.Create(&p).Error; err != nil {
+func (project *Project) CreateProject(db *gorm.DB) *error.ErrorResp {
+	if err := db.Create(&project).Error; err != nil {
 		errResponse := error.New(error.WithDetails(err))
 		return errResponse
 	}

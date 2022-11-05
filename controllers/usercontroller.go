@@ -105,13 +105,12 @@ func CreateUser(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// TODO: need to refactor and finish func.
+// TODO: need to resolve how to update Has many relationship.
 func UpdateUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		fmt.Println("---UpdateUser---")
 
-		userId, err := utils.CastStringToUint(mux.Vars(r))
+		uintParams, err := utils.CastStringToUint(mux.Vars(r))
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -119,29 +118,19 @@ func UpdateUser(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		user := &models.User{
-			//ID: 2,
-			Name: "jinzhu",
-			/*Projects: []models.Project{
-				ID: 2,
-			},*/
-		}
-		/*user.ID = userId[0]
-		fmt.Println("userId: ", userId[0])
+		user := &models.User{}
+		user.ID = uintParams[0]
 		if errResp := user.GetUser(db); errResp != nil {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(errResp)
 			return
-		}*/
-		fmt.Println("userId: ", userId)
-		dump.P(user)
-		/*if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		}
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
-		}*/
-
+		}
 		if errResp := user.UpdateUser(db); errResp != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(errResp)
@@ -155,8 +144,33 @@ func UpdateUser(db *gorm.DB) http.HandlerFunc {
 
 func DeleteUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("---DeleteUser---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		uintParams, err := utils.CastStringToUint(mux.Vars(r))
+		if err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+
+		user := &models.User{}
+		user.ID = uintParams[0]
+		if errResp := user.GetUser(db); errResp != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
+		dump.P(user)
+
+		if errResp := user.DeleteUser(db); errResp != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode("Endpoint: DeleteUser not yet been implemented!")
+		json.NewEncoder(w).Encode(user)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var Log *logrus.Logger // share will all packages
+var Log *logrus.Logger // share with all packages
 
 func init() {
 	Log = logrus.New()

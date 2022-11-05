@@ -8,7 +8,7 @@ import (
 	apiError "timeclock/error"
 	"timeclock/logger"
 
-	"github.com/gookit/goutil/dump"
+	//"github.com/gookit/goutil/dump"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -23,22 +23,12 @@ type User struct {
 	Projects      []Project `json:"projects" gorm:"many2many:user_Projects;"`
 }
 
-func (user *User) GetUserInternal(db *gorm.DB) *apiError.ErrorResp {
-	if result := db.First(&user); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+func (user *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
+	if err := db.Model(user).Preload("Projects").First(&user); err.Error != nil {
+		if errors.Is(err.Error, gorm.ErrRecordNotFound) {
 			return apiError.New(apiError.WithDetails(fmt.Sprintf("User with ID:%s not found", strconv.FormatUint(uint64(user.ID), 10))))
 		}
-		return apiError.New(apiError.WithDetails(result.Error))
-	}
-
-	return nil
-}
-
-func (user *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
-	dump.P(user.ID)
-	if err := db.Model(user).Preload("Projects").Find(&user).Error; err != nil {
-		errResponse := apiError.New(apiError.WithDetails(err))
-		return errResponse
+		return apiError.New(apiError.WithDetails(err.Error))
 	}
 
 	return nil
@@ -64,8 +54,8 @@ func (user *User) GetUserByEmail(db *gorm.DB) *apiError.ErrorResp {
 	return nil
 }
 
-func (u *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
-	if result := db.Create(&u); result.Error != nil {
+func (user *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
+	if result := db.Create(&user); result.Error != nil {
 		logger.Log.Error(result.Error)
 		return apiError.New(apiError.WithDetails(result.Error))
 	}
@@ -74,9 +64,18 @@ func (u *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
 }
 
 func (user *User) UpdateUser(db *gorm.DB) *apiError.ErrorResp {
-	if err := db.Model(user).Updates(user); err != nil {
-		logger.Log.Error(err)
-		return apiError.New(apiError.WithDetails(err))
+	if result := db.Save(user); result.Error != nil {
+		logger.Log.Error(result.Error)
+		return apiError.New(apiError.WithDetails(result.Error))
+	}
+
+	return nil
+}
+
+func (user *User) DeleteUser(db *gorm.DB) *apiError.ErrorResp  {
+	if err := db.Delete(&user).Error; err != nil {
+		logger.Log.Error(err.Error)
+		return apiError.New(apiError.WithDetails(err.Error))
 	}
 
 	return nil
@@ -98,11 +97,3 @@ func (user *User) CheckPassword(providedPassword string) *apiError.ErrorResp {
 	}
 	return nil
 }
-
-/*func DeleteUser(userId string) error {
-	if err := db.Delete(&User{}, userId); err != nil {
-		return nil
-	}
-
-	return nil
-}*/
