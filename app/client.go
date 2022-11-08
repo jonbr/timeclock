@@ -1,11 +1,11 @@
 package app
 
 import (
+	"log"
+
 	"timeclock/controllers"
 	"timeclock/middlewares"
 	"timeclock/models"
-
-	"log"
 
 	"github.com/gorilla/mux"
 	"gorm.io/driver/mysql"

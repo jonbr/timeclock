@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	//"timeclock/auth"
 	"timeclock/error"
 	"timeclock/logger"
 	"timeclock/models"
@@ -85,12 +84,10 @@ func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		
-		//tokenString := r.Header.Get("Authorization")
 		var p models.Project
 		json.NewDecoder(r.Body).Decode(&p)
 
 		u := &models.User{}
-		//u.Email, _ = auth.ValidateToken(tokenString)
 		if errResp := u.GetUserByEmail(db); errResp != nil {
 			logger.Log.Error(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))
 			w.WriteHeader(http.StatusNotFound)
