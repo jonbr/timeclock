@@ -67,6 +67,11 @@ func (r *result) RowsAffected() (int64, error) {
    return r.rowsAffected, r.err
 }
 
+type NullTime struct {
+   Time  time.Time
+   Valid bool // Valid is true if Time is not NULL
+}
+
 type AnyTime struct{}
 
 func (a AnyTime) Match(v driver.Value) bool {
@@ -180,9 +185,11 @@ func Test_CreateProject(t *testing.T) {
       AddRow(userID, userName, userUsername, userEmail, userAdministrator))
 
    // insert
+   //var deletedat NullTime
+   //mock.MatchExpectationsInOrder(false)
    mock.ExpectBegin()
-   mock.ExpectExec("INSERT INTO projects\\(name, description\\)").
-      WithArgs("Jon", "Masson").
+   mock.ExpectExec("^INSERT (.+)").
+      //WithArgs(AnyArg(), AnyArg(), AnyArg(), "sdf", "sljd").
       WillReturnResult(&result{insertID:int64(1),rowsAffected:int64(1)})
    fmt.Println(mock.ExpectationsWereMet())
    mock.ExpectCommit()

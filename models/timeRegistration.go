@@ -32,7 +32,7 @@ func (tr *TimeRegister) ClockIn(db *gorm.DB) *apiError.ErrorResp {
 		logger.Log.Error(err)
 		return apiError.New(apiError.WithDetails(err))
 	}
-	// check if user is already checked in
+	// check if user is already clocked-in
 	if lastTimeRegister.ClockInTime != nil && lastTimeRegister.ClockOutTime == nil {
 		logger.Log.Error(fmt.Sprintf("UserId: %s already clocked-in", strconv.FormatUint(uint64(tr.UserID), 10)))
 		return apiError.New(apiError.WithDetails(fmt.Sprintf("UserId: %s already clocked-in", strconv.FormatUint(uint64(tr.UserID), 10))))

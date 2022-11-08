@@ -28,7 +28,7 @@ func main() {
 	a.InitializeRoutes()
 
 	// Start the server
-	log.Println(fmt.Sprintf("Starting Server on port %s", AppConfig.Port))
+	log.Printf(fmt.Sprintf("Starting Server on port %s", AppConfig.Port))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", AppConfig.Port), a.Router))
 
 	//logger.Log.Info("Info") // use the wrapper and public configured Logrus

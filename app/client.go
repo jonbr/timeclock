@@ -28,7 +28,10 @@ func (a *App) Connect(connectionString string) {
 }
 
 func (a *App) Migrate() {
-	a.DB.AutoMigrate(&models.User{}, &models.TimeRegister{}, &models.Project{})
+	if err := a.DB.AutoMigrate(&models.User{}, &models.TimeRegister{}, &models.Project{}); err != nil {
+		log.Fatal(err)
+		panic("Database migration failed")
+	}
 	log.Println("Database Migration Completed...")
 }
 
