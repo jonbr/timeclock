@@ -139,7 +139,46 @@ func CreateProject(db *gorm.DB) http.HandlerFunc {
 func UpdateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		tokenString := r.Header.Get("Authorization")
+
+		u := &models.User{}
+		u.Email, _ = auth.ValidateToken(tokenString)
+		if errResp := u.GetUserByEmail(db); errResp != nil {
+			logger.Log.Error(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))))
+			return
+		}
+		if !u.Administrator {
+			logger.Log.Error(fmt.Sprintf("User %s does not have sufficient privledges to delete a project!", u.Name))
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User %s does not have sufficient privledges to delete a project!", u.Name))))
+			return
+		}
+
+		uintParams, err := utils.CastStringToUint(mux.Vars(r))
+		if err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			if err := json.NewEncoder(w).Encode(err); err != nil {
+				logger.Log.Error(err)
+			}
+			return
+		}
+		var p models.Project
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			logger.Log.Error(err)
+		}
+		p.ID = uintParams[0]
+		//dump.P(p)
+		if errResp := p.UpdateProject(db); errResp != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errResp)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(p)
 	}
 }
 
