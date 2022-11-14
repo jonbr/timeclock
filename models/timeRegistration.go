@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	apiError "timeclock/error"
+	customError "timeclock/error"
 	"timeclock/logger"
 
 	"gorm.io/gorm"
@@ -23,52 +23,69 @@ type TimeRegister struct {
 	Project               Project
 }
 
-func (tr *TimeRegister) ClockIn(db *gorm.DB) *apiError.ErrorResp {
+func (tr *TimeRegister) ClockIn(db *gorm.DB) *customError.ErrorResp {
 	var timeStamp = time.Now()
 	tr.ClockInTime = &timeStamp
 
 	lastTimeRegister, err := getLastTimeRegisterRecord(db, tr.UserID)
 	if err != nil {
 		logger.Log.Error(err)
-		return apiError.New(apiError.WithDetails(err))
+		return customError.New(customError.WithDetails(err))
 	}
 	// check if user is already clocked-in
 	if lastTimeRegister.ClockInTime != nil && lastTimeRegister.ClockOutTime == nil {
-		logger.Log.Error(fmt.Sprintf("UserId: %s already clocked-in", strconv.FormatUint(uint64(tr.UserID), 10)))
-		return apiError.New(apiError.WithDetails(fmt.Sprintf("UserId: %s already clocked-in", strconv.FormatUint(uint64(tr.UserID), 10))))
+		customeErrorResp := fmt.Sprintf("UserId: %s already clocked-in", strconv.FormatUint(uint64(tr.UserID), 10))
+		logger.Log.Error(customeErrorResp)
+		return customError.New(customError.WithMessage("clocked-in"), customError.WithDetails(customeErrorResp))
 	}
 
 	if result := db.Create(&tr); result.Error != nil {
 		logger.Log.Error(result.Error)
-		return apiError.New(apiError.WithDetails(result.Error))
+		return customError.New(customError.WithDetails(result.Error))
 	}
 
 	return nil
 }
 
-func (tr *TimeRegister) ClockOut(db *gorm.DB) *apiError.ErrorResp {
+func (tr *TimeRegister) ClockOut(db *gorm.DB) *customError.ErrorResp {
 	var timeStamp = time.Now()
 	clockOutTime := &timeStamp
 
 	lastTimeRegister, err := getLastTimeRegisterRecord(db, tr.UserID)
 	if err != nil {
 		logger.Log.Error(err)
-		return apiError.New(apiError.WithDetails(err))
+		return customError.New(customError.WithDetails(err))
 	}
 	// check if last record clocked-out is set or not
 	if lastTimeRegister.ClockOutTime != nil {
 		logger.Log.Error(fmt.Sprintf("UserId: %s already clocked-out", strconv.FormatUint(uint64(tr.UserID), 10)))
-		return apiError.New(apiError.WithDetails(fmt.Sprintf("UserId: %s already clocked-out", strconv.FormatUint(uint64(tr.UserID), 10))))
+		return customError.New(customError.WithDetails(fmt.Sprintf("UserId: %s already clocked-out", strconv.FormatUint(uint64(tr.UserID), 10))))
 	}
 
 	// calculate time difference between clocked-out and clocked-in timestamps in minutes.
 	timeDuration := timeDurationMinutes(*lastTimeRegister.ClockInTime, *clockOutTime)
 	if result := db.Model(&lastTimeRegister).Updates(TimeRegister{ClockOutTime: clockOutTime, TimeDurationInMinutes: timeDuration}); result.Error != nil {
 		logger.Log.Error(result.Error)
-		return apiError.New(apiError.WithDetails(result.Error))
+		return customError.New(customError.WithDetails(result.Error))
 	}
 
 	return nil
+}
+
+func (tr *TimeRegister) ClockedInStatus(db *gorm.DB) (bool, error) {
+	lastTimeRegister, err := getLastTimeRegisterRecord(db, tr.UserID)
+	if err != nil {
+		logger.Log.Error(err)
+		return false, err
+	}
+
+	if lastTimeRegister.ClockOutTime == nil {
+		return true, nil
+		//logger.Log.Error(fmt.Sprintf("UserId: %s already clocked-out", strconv.FormatUint(uint64(tr.UserID), 10)))
+		//return apiError.New(apiError.WithDetails(fmt.Sprintf("UserId: %s already clocked-out", strconv.FormatUint(uint64(tr.UserID), 10))))
+	}
+
+	return false, nil
 }
 
 func getLastTimeRegisterRecord(db *gorm.DB, userID uint) (TimeRegister, error) {

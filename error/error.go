@@ -35,6 +35,13 @@ func New(opts ...Option) *ErrorResp {
 	return resp
 }
 
+// WithMessage provides messages along with response
+func WithMessage(message string) Option {
+	return func(resp *ErrorResp) {
+		resp.Err.Message = message
+	}
+}
+
 // WithDetails provides any type of error details into error response
 func WithDetails(details ...interface{}) Option {
 	return func(resp *ErrorResp) {

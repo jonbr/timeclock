@@ -43,7 +43,8 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
 func GetUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
 		userId, err := utils.CastStringToUint(mux.Vars(r))
 		if err != nil {
 			logger.Log.Error(err)
@@ -125,15 +126,18 @@ func UpdateUser(db *gorm.DB) http.HandlerFunc {
 			json.NewEncoder(w).Encode(errResp)
 			return
 		}
+		// drop user.Projects obj.
+		user.Projects = nil
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
+		//dump.P(user)
 		if errResp := user.UpdateUser(db); errResp != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(errResp)))
 			return
 		}
 

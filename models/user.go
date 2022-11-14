@@ -8,9 +8,10 @@ import (
 	apiError "timeclock/error"
 	"timeclock/logger"
 
-	//"github.com/gookit/goutil/dump"
+	"github.com/gookit/goutil/dump"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	//"github.com/go-sql-driver/mysql"
 )
 
 type User struct {
@@ -21,6 +22,12 @@ type User struct {
 	Password      string    `json:"password"`
 	Administrator bool      `json:"administrator"`
 	Projects      []Project `json:"projects" gorm:"many2many:user_Projects;"`
+}
+
+// UserProjects join table for linking projects to users.
+type UserProjects struct {
+	UserID 			uint
+	ProjectID 		uint
 }
 
 func (user *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
@@ -63,20 +70,73 @@ func (user *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
 	return nil
 }
 
-func (user *User) UpdateUser(db *gorm.DB) *apiError.ErrorResp {
-	if result := db.Save(user); result.Error != nil {
+// TODO: change all models funcs. to return standard error instead of apiError,
+// and have the controller only return an apiError obj.
+func (user *User) UpdateUser(db *gorm.DB) error {
+	// updating which projects user has relationship with.
+	//dump.P(user)
+	if len(user.Projects) > 0 {
+		fmt.Println("updating which projects user has relationship with")
+		if err := updateUserProjects(db, user.ID, user.Projects); err != nil {
+			logger.Log.Error(err)
+			return err
+		}
+	}
+
+	result := db.Save(user);
+	if result.Error != nil {
 		logger.Log.Error(result.Error)
-		return apiError.New(apiError.WithDetails(result.Error))
+		return result.Error
+	}
+	if result.RowsAffected < 1 {	
+		customError := fmt.Sprintf("Can't update user with id: %s it does not exists!", strconv.FormatUint(uint64(user.ID), 10))
+		logger.Log.Error(customError)
+		return errors.New(customError)	
 	}
 
 	return nil
 }
 
-func (user *User) DeleteUser(db *gorm.DB) *apiError.ErrorResp  {
+func (user *User) DeleteUser(db *gorm.DB) *apiError.ErrorResp {
 	if err := db.Delete(&user).Error; err != nil {
 		logger.Log.Error(err.Error)
 		return apiError.New(apiError.WithDetails(err.Error))
 	}
+
+	return nil
+}
+
+func updateUserProjects(db *gorm.DB, userID uint, projects []Project) error {
+	userProject := UserProjects{
+		UserID: 	userID,
+		ProjectID: 	uint(2),
+	}
+	if result := db.Debug().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&userProject); result.Error != nil {
+		dump.P(result.Error)
+	}
+	fmt.Println("project was not inserted, but instead removed!")
+	//continue
+
+	/*for _, project := range projects {
+		userProject := UserProjects{
+			UserID: 	userID,
+			ProjectID: 	project.ID,
+		}
+		dump.P(userProject)
+
+		if result := db.Debug().Create(userProject); result.Error != nil {
+			// record already exists in db, will be removed instead of being inserted.
+			if result.Error.(*mysql.MySQLError).Number == 1062 {
+				if result := db.Debug().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&userProject); result.Error != nil {
+					dump.P(result.Error)
+				}
+				fmt.Println("project was not inserted, but instead removed!")
+				//continue
+			}
+			dump.P(result.Error)
+		}
+		fmt.Println("project attached to user")
+	}*/
 
 	return nil
 }
