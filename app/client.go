@@ -28,7 +28,13 @@ func (a *App) Connect(connectionString string) {
 }
 
 func (a *App) Migrate() {
-	if err := a.DB.AutoMigrate(&models.User{}, &models.TimeRegister{}, &models.Project{}); err != nil {
+	if err := a.DB.AutoMigrate(
+		&models.User{},
+		&models.TimeRegister{},
+		&models.Project{},
+		&models.Inventory{},
+		&models.BluePrint{},
+		&models.GlassBox{}); err != nil {
 		log.Fatal(err)
 		panic("Database migration failed")
 	}
@@ -54,6 +60,10 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/clockin", controllers.TimeRegistrationClockIn(a.DB)).Methods("POST")
 	a.Router.Handle("/timeregistration/clockout", controllers.TimeRegistrationClockOut(a.DB)).Methods("POST")
 	a.Router.Handle("/timeregistration/status", controllers.TimeRegistrationStatus(a.DB)).Methods("GET")
+
+	//
+	a.Router.Handle("/inventory/glass/{boxid}", controllers.InventoryGlass(a.DB)).Methods("POST")
+	a.Router.Handle("/inventory/blueprint/", controllers.InventoryBluePrint(a.DB)).Methods("POST")
 
 	a.Router.Use(middlewares.Auth)
 }

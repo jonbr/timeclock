@@ -8,6 +8,7 @@ import (
 	apiError "timeclock/error"
 	"timeclock/logger"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/gookit/goutil/dump"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -26,8 +27,8 @@ type User struct {
 
 // UserProjects join table for linking projects to users.
 type UserProjects struct {
-	UserID 			uint
-	ProjectID 		uint
+	UserID    uint `gorm:"primaryKey;autoIncrement:false"`
+	ProjectID uint `gorm:"primaryKey;autoIncrement:false"`
 }
 
 func (user *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
@@ -83,15 +84,15 @@ func (user *User) UpdateUser(db *gorm.DB) error {
 		}
 	}
 
-	result := db.Save(user);
+	result := db.Save(user)
 	if result.Error != nil {
 		logger.Log.Error(result.Error)
 		return result.Error
 	}
-	if result.RowsAffected < 1 {	
+	if result.RowsAffected < 1 {
 		customError := fmt.Sprintf("Can't update user with id: %s it does not exists!", strconv.FormatUint(uint64(user.ID), 10))
 		logger.Log.Error(customError)
-		return errors.New(customError)	
+		return errors.New(customError)
 	}
 
 	return nil
@@ -107,36 +108,26 @@ func (user *User) DeleteUser(db *gorm.DB) *apiError.ErrorResp {
 }
 
 func updateUserProjects(db *gorm.DB, userID uint, projects []Project) error {
-	userProject := UserProjects{
-		UserID: 	userID,
-		ProjectID: 	uint(2),
-	}
-	if result := db.Debug().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&userProject); result.Error != nil {
-		dump.P(result.Error)
-	}
-	fmt.Println("project was not inserted, but instead removed!")
-	//continue
-
-	/*for _, project := range projects {
+	for _, project := range projects {
 		userProject := UserProjects{
-			UserID: 	userID,
-			ProjectID: 	project.ID,
+			UserID:    userID,
+			ProjectID: project.ID,
 		}
 		dump.P(userProject)
 
 		if result := db.Debug().Create(userProject); result.Error != nil {
 			// record already exists in db, will be removed instead of being inserted.
 			if result.Error.(*mysql.MySQLError).Number == 1062 {
-				if result := db.Debug().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&userProject); result.Error != nil {
+				if result := db.Debug().Unscoped().Delete(&userProject); result.Error != nil {
 					dump.P(result.Error)
 				}
 				fmt.Println("project was not inserted, but instead removed!")
-				//continue
+				continue
 			}
 			dump.P(result.Error)
 		}
 		fmt.Println("project attached to user")
-	}*/
+	}
 
 	return nil
 }

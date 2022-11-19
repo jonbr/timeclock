@@ -19,7 +19,7 @@ import (
 func GetUsers(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		
+
 		user := &models.User{}
 		users, err := user.GetUsers(db)
 		if err != nil {
