@@ -22,7 +22,7 @@ func GetProjects(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		
+
 		p := &models.Project{}
 		projects, err := p.GetProject(db)
 		if err != nil {
@@ -100,8 +100,9 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		//w.Header().Set("Access-Control-Allow-Origin", "*")
 		tokenString := r.Header.Get("Authorization")
-		
+
 		var p models.Project
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			logger.Log.Error(err)
@@ -179,7 +180,7 @@ func UpdateProject(db *gorm.DB) http.HandlerFunc {
 			json.NewEncoder(w).Encode(errResp)
 			return
 		}
-		
+
 		logger.Log.WithFields(logrus.Fields{
 			"host":   r.URL.Host,
 			"path":   r.URL.Path,

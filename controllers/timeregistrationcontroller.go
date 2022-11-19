@@ -2,17 +2,18 @@ package controllers
 
 import (
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	"net/http"
-	//"strconv"
+	"strconv"
 
-	//"timeclock/auth"
+	"timeclock/auth"
+	"timeclock/error"
 	apiError "timeclock/error"
 	"timeclock/logger"
 	"timeclock/models"
 
-	"gorm.io/gorm"
 	"github.com/gookit/goutil/dump"
+	"gorm.io/gorm"
 )
 
 func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
@@ -21,7 +22,7 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		// comment out for localhost testing and developing.
-		/*tokenString := r.Header.Get("Authorization")
+		tokenString := r.Header.Get("Authorization")
 		fmt.Println("auth: ", tokenString)
 		u := &models.User{}
 		u.Email, _ = auth.ValidateToken(tokenString)
@@ -30,7 +31,7 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))))
 			return
-		}*/
+		}
 
 		var tr models.TimeRegister
 		if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
@@ -56,8 +57,8 @@ func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		
-		/*tokenString := r.Header.Get("Authorization")
+
+		tokenString := r.Header.Get("Authorization")
 		u := &models.User{}
 		u.Email, _ = auth.ValidateToken(tokenString)
 		if errResp := u.GetUserByEmail(db); errResp != nil {
@@ -65,7 +66,7 @@ func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))))
 			return
-		}*/
+		}
 
 		var tr models.TimeRegister
 		if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
@@ -74,8 +75,7 @@ func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 			json.NewEncoder(w).Encode(apiError.New(apiError.WithDetails(err)))
 			return
 		}
-		//tr.UserID = u.ID
-		tr.UserID = 2
+		tr.UserID = u.ID
 
 		if errResp := tr.ClockOut(db); errResp != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -92,8 +92,8 @@ func TimeRegistrationStatus(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		
-		/*tokenString := r.Header.Get("Authorization")
+
+		tokenString := r.Header.Get("Authorization")
 		u := &models.User{}
 		u.Email, _ = auth.ValidateToken(tokenString)
 		if errResp := u.GetUserByEmail(db); errResp != nil {
@@ -101,12 +101,12 @@ func TimeRegistrationStatus(db *gorm.DB) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(fmt.Sprintf("User with ID: %s not found!", strconv.FormatUint(uint64(u.ID), 10)))))
 			return
-		}*/
+		}
 
 		var tr models.TimeRegister
 		tr.UserID = 2
 
-		isClockedIn, err := tr.ClockedInStatus(db); 
+		isClockedIn, err := tr.ClockedInStatus(db)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(apiError.New(apiError.WithDetails(err)))

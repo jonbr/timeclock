@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"timeclock/controllers"
-	//"timeclock/middlewares"
+	"timeclock/middlewares"
 	"timeclock/models"
 
 	"github.com/gorilla/mux"
@@ -46,7 +46,7 @@ func (a *App) InitializeRoutes() {
 
 	a.Router.Handle("/project", controllers.GetProjects(a.DB)).Methods("GET")
 	a.Router.Handle("/project/{id}", controllers.GetProject(a.DB)).Methods("GET")
-	
+
 	a.Router.Handle("/project/", controllers.CreateProject(a.DB)).Methods("POST")
 	a.Router.Handle("/project/{id}", controllers.UpdateProject(a.DB)).Methods("PUT")
 	a.Router.Handle("/project/{id}", controllers.DeleteProject(a.DB)).Methods("DELETE")
@@ -55,5 +55,5 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/clockout", controllers.TimeRegistrationClockOut(a.DB)).Methods("POST")
 	a.Router.Handle("/timeregistration/status", controllers.TimeRegistrationStatus(a.DB)).Methods("GET")
 
-	//a.Router.Use(middlewares.Auth)
+	a.Router.Use(middlewares.Auth)
 }
