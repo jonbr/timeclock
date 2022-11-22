@@ -2,55 +2,81 @@ package models
 
 import (
 	"bufio"
+	"fmt"
 	"strconv"
 	"strings"
-	"time"
 	apiError "timeclock/error"
 
+	"github.com/gookit/goutil/dump"
 	"gorm.io/gorm"
 )
 
 type Inventory struct {
-	ID        uint `gorm:"primaryKey;autoIncrement:false"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-	Type      string
+	gorm.Model
+	Type string
 }
 
-type measurements struct {
+type measurement struct {
 	Width    int `json:"width" gorm:"not null"`
 	Height   int
 	Thicknes int
+	Quantity int
+}
+
+type BluePrintDefinition struct {
+	Name        string `gorm:"primaryKey;size:191"`
+	InventoryID uint
+	Inventory   Inventory
 }
 
 type BluePrint struct {
-	Inventory           Inventory    `gorm:"embedded"`
-	Measurements        measurements `gorm:"embedded"`
+	Name                string
+	BluePrintDefinition BluePrintDefinition `gorm:"foreignKey:Name"`
+	Measurement         measurement         `gorm:"embedded"`
 	Quantity            int
 	BluePrintIdentifier string
 }
 
-type GlassBox struct {
-	BoxID        int
-	Inventory    Inventory    `gorm:"foreignKey:BoxID"`
-	Measurements measurements `gorm:"embedded"`
+type GlassDefinition struct {
+	ID          uint `gorm:"primaryKey;autoIncrement:false"`
+	InventoryID uint
+	Inventory   Inventory
+	ColorScheme string `gorm:"not null"`
+	LocalName   string `gorm:"not null"`
 }
 
-func InventoryGlassCreate(db *gorm.DB, glassBoxID uint, glassBoxData []byte) ([]GlassBox, *apiError.ErrorResp) {
-	scanner := bufio.NewScanner(strings.NewReader(string(glassBoxData)))
-	scanner.Split(bufio.ScanWords)
+type GlassBox struct {
+	BoxID           uint
+	GlassDefinition GlassDefinition `gorm:"foreignKey:BoxID"`
+	Measurement     measurement     `gorm:"embedded"`
+}
+
+func CreateGlassBox(db *gorm.DB, boxID uint, localname string, glassBoxData []byte) ([]GlassBox, *apiError.ErrorResp) {
+
+	idx, err := localnameValidation(localname)
+	if err != nil {
+		return nil, apiError.New(apiError.WithDetails(err))
+	}
 
 	//charsToSkip := []string{"S", "W", "X", "H", "T"}
+	// first create Inventory record
+	var glassDefinition = GlassDefinition{ID: boxID, InventoryID: 1, ColorScheme: localname[:idx], LocalName: localname}
+	inventoryResult := db.Create(&glassDefinition)
+	if inventoryResult.Error != nil {
+		return nil, apiError.New(apiError.WithDetails(inventoryResult.Error))
+	}
 
 	glassBoxes := []GlassBox{}
 	var width, height int
-
 	var index = 1
+	scanner := bufio.NewScanner(strings.NewReader(string(glassBoxData)))
+	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
 		if scanner.Text() == "S" || scanner.Text() == "W" || scanner.Text() == "H" || scanner.Text() == "T" || scanner.Text() == "X" {
 			continue
 		}
+
+		dump.P(scanner.Text())
 
 		switch index {
 		case 1:
@@ -59,8 +85,8 @@ func InventoryGlassCreate(db *gorm.DB, glassBoxID uint, glassBoxData []byte) ([]
 			height = addMeasurement(scanner.Text())
 		case 3:
 			glassBoxes = append(glassBoxes, GlassBox{
-				BoxID: int(glassBoxID),
-				Measurements: measurements{
+				BoxID: glassDefinition.ID,
+				Measurement: measurement{
 					Width:    width,
 					Height:   height,
 					Thicknes: addMeasurement(scanner.Text()),
@@ -74,17 +100,16 @@ func InventoryGlassCreate(db *gorm.DB, glassBoxID uint, glassBoxData []byte) ([]
 		return nil, apiError.New(apiError.WithDetails(err))
 	}
 
-	// first create Inventory record
-	if err := db.Create(&Inventory{ID: glassBoxID, Type: "glass"}).Error; err != nil {
-		return nil, apiError.New(apiError.WithDetails(err))
-	}
-
 	// then insert all glasses into GlassBox table
 	if err := db.Create(&glassBoxes).Error; err != nil {
 		return nil, apiError.New(apiError.WithDetails(err))
 	}
 
 	return glassBoxes, nil
+}
+
+func CreateBluePrint(db *gorm.DB) {
+
 }
 
 func addMeasurement(measurement string) int {
@@ -94,4 +119,18 @@ func addMeasurement(measurement string) int {
 	}*/
 
 	return measurementInt
+}
+
+// TODO: Add color validation
+func localnameValidation(localname string) (int, error) {
+	idx := strings.Index(localname, "-")
+	customError := fmt.Errorf("Localname incorrect format '%s' must be on format 'color-number'", localname)
+	if idx == -1 {
+		return -1, customError
+	}
+	if _, err := strconv.Atoi(localname[idx+1:]); err != nil {
+		return -1, customError
+	}
+
+	return idx, nil
 }

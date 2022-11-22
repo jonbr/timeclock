@@ -33,6 +33,8 @@ func (a *App) Migrate() {
 		&models.TimeRegister{},
 		&models.Project{},
 		&models.Inventory{},
+		&models.BluePrintDefinition{},
+		&models.GlassDefinition{},
 		&models.BluePrint{},
 		&models.GlassBox{}); err != nil {
 		log.Fatal(err)
@@ -62,8 +64,8 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/status", controllers.TimeRegistrationStatus(a.DB)).Methods("GET")
 
 	//
-	a.Router.Handle("/inventory/glass/{boxid}", controllers.InventoryGlass(a.DB)).Methods("POST")
-	a.Router.Handle("/inventory/blueprint/", controllers.InventoryBluePrint(a.DB)).Methods("POST")
+	a.Router.Handle("/glassbox/{boxid}/{localname}", controllers.InventoryGlass(a.DB)).Methods("POST")
+	a.Router.Handle("/blueprint", controllers.InventoryBluePrint(a.DB)).Methods("POST")
 
 	a.Router.Use(middlewares.Auth)
 }

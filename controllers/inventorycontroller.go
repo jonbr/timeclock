@@ -18,7 +18,10 @@ func InventoryGlass(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/(text|json); charset=UTF-8")
 
-		boxID, err := utils.CastStringToUint(mux.Vars(r))
+		vars := mux.Vars(r)
+		dump.P(vars)
+
+		boxID, err := utils.CastParamToUint(vars["boxid"])
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -31,11 +34,11 @@ func InventoryGlass(db *gorm.DB) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 		}
-		dump.P(string(glassBoxRawData))
+		//dump.P(string(glassBoxRawData))
 
 		var glassBoxes []models.GlassBox
 		var errRespo *error.ErrorResp
-		if glassBoxes, errRespo = models.InventoryGlassCreate(db, boxID[0], glassBoxRawData); errRespo != nil {
+		if glassBoxes, errRespo = models.CreateGlassBox(db, boxID, vars["localname"], glassBoxRawData); errRespo != nil {
 			logger.Log.Error(errRespo)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(errRespo)
@@ -50,9 +53,15 @@ func InventoryGlass(db *gorm.DB) http.HandlerFunc {
 func InventoryBluePrint(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		//w.Header().Set("Access-Control-Allow-Origin", "*")
 
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode("Endpoint not yet implemented!")
+		var bp models.BluePrint
+		if err := json.NewDecoder(r.Body).Decode(&bp); err != nil {
+			logger.Log.Error(err)
+		}
+
+		models.CreateBluePrint(db)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(bp)
 	}
 }
