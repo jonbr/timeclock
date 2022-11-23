@@ -34,11 +34,9 @@ func InventoryGlass(db *gorm.DB) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 		}
-		//dump.P(string(glassBoxRawData))
 
-		var glassBoxes []models.GlassBox
-		var errRespo *error.ErrorResp
-		if glassBoxes, errRespo = models.CreateGlassBox(db, boxID, vars["localname"], glassBoxRawData); errRespo != nil {
+		glassBoxResponse, errRespo := models.CreateGlassBox(db, boxID, vars["internalname"], glassBoxRawData)
+		if errRespo != nil {
 			logger.Log.Error(errRespo)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(errRespo)
@@ -46,7 +44,7 @@ func InventoryGlass(db *gorm.DB) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(glassBoxes)
+		json.NewEncoder(w).Encode(glassBoxResponse)
 	}
 }
 
@@ -54,14 +52,21 @@ func InventoryBluePrint(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		var bp models.BluePrint
-		if err := json.NewDecoder(r.Body).Decode(&bp); err != nil {
+		var bpr models.BluePrintRequest
+		if err := json.NewDecoder(r.Body).Decode(&bpr); err != nil {
 			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 		}
 
-		models.CreateBluePrint(db)
+		if err := bpr.CreateBluePrint(db); err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(err)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(bp)
+		json.NewEncoder(w).Encode(bpr)
 	}
 }

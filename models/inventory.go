@@ -7,7 +7,6 @@ import (
 	"strings"
 	apiError "timeclock/error"
 
-	"github.com/gookit/goutil/dump"
 	"gorm.io/gorm"
 )
 
@@ -16,57 +15,45 @@ type Inventory struct {
 	Type string
 }
 
-type measurement struct {
-	Width    int `json:"width" gorm:"not null"`
-	Height   int
-	Thicknes int
-	Quantity int
-}
-
-type BluePrintDefinition struct {
-	Name        string `gorm:"primaryKey;size:191"`
-	InventoryID uint
-	Inventory   Inventory
+type Measurement struct {
+	Width         int `json:"width" gorm:"not null"`
+	Height        int
+	Thicknes      int
+	Quantity      int
+	GlassBoxID    uint    `gorm:"Index"`
+	BluePrintName *string `gorm:"Index;size:191"`
 }
 
 type BluePrint struct {
-	Name                string
-	BluePrintDefinition BluePrintDefinition `gorm:"foreignKey:Name"`
-	Measurement         measurement         `gorm:"embedded"`
-	Quantity            int
-	BluePrintIdentifier string
-}
-
-type GlassDefinition struct {
-	ID          uint `gorm:"primaryKey;autoIncrement:false"`
-	InventoryID uint
-	Inventory   Inventory
-	ColorScheme string `gorm:"not null"`
-	LocalName   string `gorm:"not null"`
+	Name        *string     `gorm:"unique"`
+	Measurement Measurement `gorm:"foreignKey:Name;references:BluePrintName"`
 }
 
 type GlassBox struct {
-	BoxID           uint
-	GlassDefinition GlassDefinition `gorm:"foreignKey:BoxID"`
-	Measurement     measurement     `gorm:"embedded"`
+	BoxID        uint `gorm:"unique"`
+	InternalName string
+	Measurement  Measurement `gorm:"foreignKey:BoxID;references:GlassBoxID"`
 }
 
-func CreateGlassBox(db *gorm.DB, boxID uint, localname string, glassBoxData []byte) ([]GlassBox, *apiError.ErrorResp) {
+type GlassBoxResponse struct {
+	BoxID        uint
+	InternalName string
+	Measurements []Measurement
+}
 
-	idx, err := localnameValidation(localname)
+type BluePrintRequest struct {
+	Name         string
+	Measurements []Measurement
+}
+
+func CreateGlassBox(db *gorm.DB, boxID uint, internalName string, glassBoxData []byte) (*GlassBoxResponse, *apiError.ErrorResp) {
+	idx, err := localnameValidation(internalName)
+	fmt.Println(idx)
 	if err != nil {
 		return nil, apiError.New(apiError.WithDetails(err))
 	}
 
-	//charsToSkip := []string{"S", "W", "X", "H", "T"}
-	// first create Inventory record
-	var glassDefinition = GlassDefinition{ID: boxID, InventoryID: 1, ColorScheme: localname[:idx], LocalName: localname}
-	inventoryResult := db.Create(&glassDefinition)
-	if inventoryResult.Error != nil {
-		return nil, apiError.New(apiError.WithDetails(inventoryResult.Error))
-	}
-
-	glassBoxes := []GlassBox{}
+	measurements := []Measurement{}
 	var width, height int
 	var index = 1
 	scanner := bufio.NewScanner(strings.NewReader(string(glassBoxData)))
@@ -76,21 +63,17 @@ func CreateGlassBox(db *gorm.DB, boxID uint, localname string, glassBoxData []by
 			continue
 		}
 
-		dump.P(scanner.Text())
-
 		switch index {
 		case 1:
 			width = addMeasurement(scanner.Text())
 		case 2:
 			height = addMeasurement(scanner.Text())
 		case 3:
-			glassBoxes = append(glassBoxes, GlassBox{
-				BoxID: glassDefinition.ID,
-				Measurement: measurement{
-					Width:    width,
-					Height:   height,
-					Thicknes: addMeasurement(scanner.Text()),
-				},
+			measurements = append(measurements, Measurement{
+				Width:      width,
+				Height:     height,
+				Thicknes:   addMeasurement(scanner.Text()),
+				GlassBoxID: boxID,
 			})
 			index = 0
 		}
@@ -100,16 +83,53 @@ func CreateGlassBox(db *gorm.DB, boxID uint, localname string, glassBoxData []by
 		return nil, apiError.New(apiError.WithDetails(err))
 	}
 
-	// then insert all glasses into GlassBox table
-	if err := db.Create(&glassBoxes).Error; err != nil {
-		return nil, apiError.New(apiError.WithDetails(err))
+	glassBox := GlassBox{BoxID: boxID, InternalName: internalName}
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
+		// create first all glasses in measurement table
+		// followd by inserting into glass_boxes table.
+		if err := tx.Create(&measurements).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&glassBox).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if transactionError != nil {
+		return nil, apiError.New(apiError.WithDetails(transactionError))
 	}
 
-	return glassBoxes, nil
+	return &GlassBoxResponse{
+		BoxID:        boxID,
+		InternalName: internalName,
+		Measurements: measurements,
+	}, nil
 }
 
-func CreateBluePrint(db *gorm.DB) {
+func (bluePrintRequest *BluePrintRequest) CreateBluePrint(db *gorm.DB) *apiError.ErrorResp {
+	//bulk create measurements records, fyrst add unique name to the measurement obj.
+	for i := range bluePrintRequest.Measurements {
+		bluePrintRequest.Measurements[i].BluePrintName = &bluePrintRequest.Name
+	}
 
+	transactionError := db.Transaction(func(tx *gorm.DB) error {
+		if err := db.Create(&bluePrintRequest.Measurements).Error; err != nil {
+			return err
+		}
+
+		// bulk create record in BluePrints for each individual measurement record.
+		if err := db.Create(&BluePrint{Name: &bluePrintRequest.Name}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if transactionError != nil {
+		return apiError.New(apiError.WithDetails(transactionError))
+	}
+
+	return nil
 }
 
 func addMeasurement(measurement string) int {

@@ -33,13 +33,13 @@ func (a *App) Migrate() {
 		&models.TimeRegister{},
 		&models.Project{},
 		&models.Inventory{},
-		&models.BluePrintDefinition{},
-		&models.GlassDefinition{},
-		&models.BluePrint{},
-		&models.GlassBox{}); err != nil {
+		&models.Measurement{},
+		&models.GlassBox{},
+		&models.BluePrint{}); err != nil {
 		log.Fatal(err)
 		panic("Database migration failed")
 	}
+
 	log.Println("Database Migration Completed...")
 }
 
@@ -64,7 +64,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/status", controllers.TimeRegistrationStatus(a.DB)).Methods("GET")
 
 	//
-	a.Router.Handle("/glassbox/{boxid}/{localname}", controllers.InventoryGlass(a.DB)).Methods("POST")
+	a.Router.Handle("/glassbox/{boxid}/{internalname}", controllers.InventoryGlass(a.DB)).Methods("POST")
 	a.Router.Handle("/blueprint", controllers.InventoryBluePrint(a.DB)).Methods("POST")
 
 	a.Router.Use(middlewares.Auth)
