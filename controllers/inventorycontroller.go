@@ -48,7 +48,7 @@ func InventoryGlass(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func InventoryBluePrint(db *gorm.DB) http.HandlerFunc {
+func InventoryCreateBluePrint(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -68,5 +68,23 @@ func InventoryBluePrint(db *gorm.DB) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(bpr)
+	}
+}
+
+func InventoryUpdateBluePrint(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("enpoint not yet implemented!")
+	}
+}
+
+func InventoryDeleteBluePrint(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("enpoint not yet implemented!")
 	}
 }

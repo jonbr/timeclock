@@ -65,7 +65,9 @@ func (a *App) InitializeRoutes() {
 
 	//
 	a.Router.Handle("/glassbox/{boxid}/{internalname}", controllers.InventoryGlass(a.DB)).Methods("POST")
-	a.Router.Handle("/blueprint", controllers.InventoryBluePrint(a.DB)).Methods("POST")
+	a.Router.Handle("/blueprint", controllers.InventoryCreateBluePrint(a.DB)).Methods("POST")
+	a.Router.Handle("/blueprint", controllers.InventoryUpdateBluePrint(a.DB)).Methods("PUT")
+	a.Router.Handle("/blueprint", controllers.InventoryDeleteBluePrint(a.DB)).Methods("DELETE")
 
 	a.Router.Use(middlewares.Auth)
 }

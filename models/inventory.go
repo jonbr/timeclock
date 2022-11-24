@@ -2,6 +2,8 @@ package models
 
 import (
 	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -18,7 +20,7 @@ type Inventory struct {
 type Measurement struct {
 	Width         int `json:"width" gorm:"not null"`
 	Height        int
-	Thicknes      int
+	Thickness     int
 	Quantity      int
 	GlassBoxID    uint    `gorm:"Index"`
 	BluePrintName *string `gorm:"Index;size:191"`
@@ -47,40 +49,29 @@ type BluePrintRequest struct {
 }
 
 func CreateGlassBox(db *gorm.DB, boxID uint, internalName string, glassBoxData []byte) (*GlassBoxResponse, *apiError.ErrorResp) {
-	idx, err := localnameValidation(internalName)
-	fmt.Println(idx)
-	if err != nil {
-		return nil, apiError.New(apiError.WithDetails(err))
-	}
-
-	measurements := []Measurement{}
-	var width, height int
-	var index = 1
-	scanner := bufio.NewScanner(strings.NewReader(string(glassBoxData)))
-	scanner.Split(bufio.ScanWords)
+	count := make(map[Measurement]int)
+	var measurements []Measurement
+	scanner := bufio.NewScanner(bytes.NewReader(glassBoxData))
 	for scanner.Scan() {
-		if scanner.Text() == "S" || scanner.Text() == "W" || scanner.Text() == "H" || scanner.Text() == "T" || scanner.Text() == "X" {
+		m, err := ParseMeasurement(scanner.Text())
+		if err != nil {
 			continue
 		}
+		m.GlassBoxID = boxID
 
-		switch index {
-		case 1:
-			width = addMeasurement(scanner.Text())
-		case 2:
-			height = addMeasurement(scanner.Text())
-		case 3:
-			measurements = append(measurements, Measurement{
-				Width:      width,
-				Height:     height,
-				Thicknes:   addMeasurement(scanner.Text()),
-				GlassBoxID: boxID,
-			})
-			index = 0
+		if n := count[m]; n > 0 {
+			count[m] = n + 1
+		} else {
+			count[m] = 1
+			measurements = append(measurements, m)
 		}
-		index++
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, apiError.New(apiError.WithDetails(err))
+	}
+
+	for i := range measurements {
+		(&measurements[i]).Quantity = count[measurements[i]]
 	}
 
 	glassBox := GlassBox{BoxID: boxID, InternalName: internalName}
@@ -132,15 +123,6 @@ func (bluePrintRequest *BluePrintRequest) CreateBluePrint(db *gorm.DB) *apiError
 	return nil
 }
 
-func addMeasurement(measurement string) int {
-	measurementInt, _ := strconv.Atoi(measurement)
-	/*if err != nil {
-		//return nil, apiError.New(apiError.WithDetails(err))
-	}*/
-
-	return measurementInt
-}
-
 // TODO: Add color validation
 func localnameValidation(localname string) (int, error) {
 	idx := strings.Index(localname, "-")
@@ -153,4 +135,30 @@ func localnameValidation(localname string) (int, error) {
 	}
 
 	return idx, nil
+}
+
+func ParseMeasurement(line string) (m Measurement, err error) {
+	for _, s := range strings.Split(line, " X ") {
+		unit := strings.Split(strings.TrimSpace(s), " ")
+		if len(unit) != 2 {
+			continue
+		}
+
+		v, err := strconv.Atoi(unit[0])
+		if err != nil {
+			return m, err
+		}
+		switch unit[1] {
+		case "W":
+			m.Width = v
+		case "H":
+			m.Height = v
+		case "T":
+			m.Thickness = v
+		}
+	}
+	if m == (Measurement{}) {
+		return m, errors.New("empty")
+	}
+	return m, nil
 }
