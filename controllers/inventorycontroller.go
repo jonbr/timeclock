@@ -52,14 +52,14 @@ func InventoryCreateBluePrint(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		var bpr models.BluePrintRequest
-		if err := json.NewDecoder(r.Body).Decode(&bpr); err != nil {
+		var bp models.BluePrint
+		if err := json.NewDecoder(r.Body).Decode(&bp); err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 		}
 
-		if err := bpr.CreateBluePrint(db); err != nil {
+		if err := bp.CreateBluePrint(db); err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(err)
@@ -67,7 +67,7 @@ func InventoryCreateBluePrint(db *gorm.DB) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(bpr)
+		json.NewEncoder(w).Encode(bp)
 	}
 }
 
@@ -83,6 +83,17 @@ func InventoryUpdateBluePrint(db *gorm.DB) http.HandlerFunc {
 func InventoryDeleteBluePrint(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode("enpoint not yet implemented!")
+	}
+}
+
+func InventoryGetBluePrint(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		models.CompareBluePrintWithGlassBox(db)
 
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode("enpoint not yet implemented!")

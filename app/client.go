@@ -33,9 +33,9 @@ func (a *App) Migrate() {
 		&models.TimeRegister{},
 		&models.Project{},
 		&models.Inventory{},
-		&models.Measurement{},
 		&models.GlassBox{},
-		&models.BluePrint{}); err != nil {
+		&models.BluePrint{},
+		&models.Measurement{}); err != nil {
 		log.Fatal(err)
 		panic("Database migration failed")
 	}
@@ -64,10 +64,13 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/status", controllers.TimeRegistrationStatus(a.DB)).Methods("GET")
 
 	//
-	a.Router.Handle("/glassbox/{boxid}/{internalname}", controllers.InventoryGlass(a.DB)).Methods("POST")
-	a.Router.Handle("/blueprint", controllers.InventoryCreateBluePrint(a.DB)).Methods("POST")
-	a.Router.Handle("/blueprint", controllers.InventoryUpdateBluePrint(a.DB)).Methods("PUT")
-	a.Router.Handle("/blueprint", controllers.InventoryDeleteBluePrint(a.DB)).Methods("DELETE")
+	a.Router.Handle("/inventory/glassbox/{boxid}/{internalname}", controllers.InventoryGlass(a.DB)).Methods("POST")
+	a.Router.Handle("/inventory/blueprint", controllers.InventoryCreateBluePrint(a.DB)).Methods("POST")
+	a.Router.Handle("/inventory/blueprint", controllers.InventoryUpdateBluePrint(a.DB)).Methods("PUT")
+	a.Router.Handle("/inventory/blueprint", controllers.InventoryDeleteBluePrint(a.DB)).Methods("DELETE")
+
+	// search func. to compare buleprints against glass boxes.
+	a.Router.Handle("/inventory/blueprint", controllers.InventoryGetBluePrint(a.DB)).Methods("GET")
 
 	a.Router.Use(middlewares.Auth)
 }
