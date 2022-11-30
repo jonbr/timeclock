@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"timeclock/error"
@@ -25,14 +24,13 @@ func GetUsers(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(err)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
 		logger.Log.WithFields(logrus.Fields{
-			"host":   r.URL.Host,
-			"path":   r.URL.Path,
-			"header": r.Header,
+			"host": r.URL.Host,
+			"path": r.URL.Path,
 		}).Info()
 
 		w.WriteHeader(http.StatusOK)
@@ -49,7 +47,7 @@ func GetUser(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(err)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
@@ -57,14 +55,13 @@ func GetUser(db *gorm.DB) http.HandlerFunc {
 		u.ID = userId[0]
 		if errResp := u.GetUser(db); errResp != nil {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
 		logger.Log.WithFields(logrus.Fields{
-			"host":   r.URL.Host,
-			"path":   r.URL.Path,
-			"header": r.Header,
+			"host": r.URL.Host,
+			"path": r.URL.Path,
 		}).Info()
 
 		w.WriteHeader(http.StatusOK)
@@ -89,16 +86,15 @@ func CreateUser(db *gorm.DB) http.HandlerFunc {
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
-		if errResp := user.CreateUser(db); errResp != nil {
+		if err := user.CreateUser(db); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
 		logger.Log.WithFields(logrus.Fields{
-			"host":   r.URL.Host,
-			"path":   r.URL.Path,
-			"header": r.Header,
+			"host": r.URL.Host,
+			"path": r.URL.Path,
 		}).Info(user)
 
 		json.NewEncoder(w).Encode(user)
@@ -106,7 +102,6 @@ func CreateUser(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// TODO: need to resolve how to update Has many relationship.
 func UpdateUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -115,15 +110,15 @@ func UpdateUser(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(err)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
 		user := &models.User{}
 		user.ID = uintParams[0]
-		if errResp := user.GetUser(db); errResp != nil {
+		if err := user.GetUser(db); err != nil {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 		// drop user.Projects obj.
@@ -148,14 +143,13 @@ func UpdateUser(db *gorm.DB) http.HandlerFunc {
 
 func DeleteUser(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("---DeleteUser---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		uintParams, err := utils.CastStringToUint(mux.Vars(r))
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(err)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
@@ -163,7 +157,7 @@ func DeleteUser(db *gorm.DB) http.HandlerFunc {
 		user.ID = uintParams[0]
 		if errResp := user.GetUser(db); errResp != nil {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 		dump.P(user)

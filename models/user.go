@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	apiError "timeclock/error"
 	"timeclock/logger"
 
 	"github.com/go-sql-driver/mysql"
@@ -31,51 +30,45 @@ type UserProjects struct {
 	ProjectID uint `gorm:"primaryKey;autoIncrement:false"`
 }
 
-func (user *User) GetUser(db *gorm.DB) *apiError.ErrorResp {
+func (user *User) GetUser(db *gorm.DB) error {
 	if err := db.Model(user).Preload("Projects").First(&user); err.Error != nil {
 		if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-			return apiError.New(apiError.WithDetails(fmt.Sprintf("User with ID:%s not found", strconv.FormatUint(uint64(user.ID), 10))))
+			return fmt.Errorf("User with ID:%s not found", strconv.FormatUint(uint64(user.ID), 10))
 		}
-		return apiError.New(apiError.WithDetails(err.Error))
+		return err.Error
 	}
 
 	return nil
 }
 
-func (user *User) GetUsers(db *gorm.DB) ([]User, *apiError.ErrorResp) {
+func (user *User) GetUsers(db *gorm.DB) ([]User, error) {
 	var users []User
-	var errResponse *apiError.ErrorResp
-
 	if err := db.Model(user).Preload("Projects").Find(&users).Error; err != nil {
-		errResponse = apiError.New(apiError.WithDetails(err))
+		return nil, err
 	}
 
-	return users, errResponse
+	return users, nil
 }
 
-func (user *User) GetUserByEmail(db *gorm.DB) *apiError.ErrorResp {
+func (user *User) GetUserByEmail(db *gorm.DB) error {
 	if err := db.Where("email = ?", user.Email).First(&user).Error; err != nil {
-		errResponse := apiError.New(apiError.WithDetails(err))
-		return errResponse
+		return err
 	}
 
 	return nil
 }
 
-func (user *User) CreateUser(db *gorm.DB) *apiError.ErrorResp {
-	if result := db.Create(&user); result.Error != nil {
-		logger.Log.Error(result.Error)
-		return apiError.New(apiError.WithDetails(result.Error))
+func (user *User) CreateUser(db *gorm.DB) error {
+	if err := db.Create(&user).Error; err != nil {
+		//logger.Log.Error(result.Error)
+		return err
 	}
 
 	return nil
 }
 
-// TODO: change all models funcs. to return standard error instead of apiError,
-// and have the controller only return an apiError obj.
 func (user *User) UpdateUser(db *gorm.DB) error {
 	// updating which projects user has relationship with.
-	//dump.P(user)
 	if len(user.Projects) > 0 {
 		fmt.Println("updating which projects user has relationship with")
 		if err := updateUserProjects(db, user.ID, user.Projects); err != nil {
@@ -98,10 +91,10 @@ func (user *User) UpdateUser(db *gorm.DB) error {
 	return nil
 }
 
-func (user *User) DeleteUser(db *gorm.DB) *apiError.ErrorResp {
+func (user *User) DeleteUser(db *gorm.DB) error {
 	if err := db.Delete(&user).Error; err != nil {
-		logger.Log.Error(err.Error)
-		return apiError.New(apiError.WithDetails(err.Error))
+		//logger.Log.Error(err.Error)
+		return err
 	}
 
 	return nil
@@ -141,10 +134,10 @@ func (user *User) HashPassword(password string) error {
 	return nil
 }
 
-func (user *User) CheckPassword(providedPassword string) *apiError.ErrorResp {
+func (user *User) CheckPassword(providedPassword string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(providedPassword))
 	if err != nil {
-		return apiError.New(apiError.WithDetails(err))
+		return err
 	}
 	return nil
 }

@@ -56,7 +56,6 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		tokenString := r.Header.Get("Authorization")
 		u := &models.User{}
@@ -91,7 +90,6 @@ func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 func TimeRegistrationStatus(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		tokenString := r.Header.Get("Authorization")
 		u := &models.User{}
@@ -104,7 +102,7 @@ func TimeRegistrationStatus(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var tr models.TimeRegister
-		tr.UserID = 2
+		tr.UserID = u.ID
 
 		isClockedIn, err := tr.ClockedInStatus(db)
 		if err != nil {

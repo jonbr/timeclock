@@ -99,11 +99,13 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
 		tokenString := r.Header.Get("Authorization")
 
 		var p models.Project
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			logger.Log.Error(err)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
+			return
 		}
 
 		u := &models.User{}
@@ -121,9 +123,9 @@ func CreateProject(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if errResp := p.CreateProject(db); errResp != nil {
+		if err := p.CreateProject(db); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
@@ -161,9 +163,7 @@ func UpdateProject(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			if err := json.NewEncoder(w).Encode(err); err != nil {
-				logger.Log.Error(err)
-			}
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 		var p models.Project
@@ -171,10 +171,9 @@ func UpdateProject(db *gorm.DB) http.HandlerFunc {
 			logger.Log.Error(err)
 		}
 		p.ID = uintParams[0]
-		//dump.P(p)
-		if errResp := p.UpdateProject(db); errResp != nil {
+		if err := p.UpdateProject(db); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
@@ -213,16 +212,14 @@ func DeleteProject(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			if err := json.NewEncoder(w).Encode(err); err != nil {
-				logger.Log.Error(err)
-			}
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 		p := &models.Project{}
 		p.ID = uintParams[0]
-		if errResp := p.DeleteProject(db); errResp != nil {
+		if err := p.DeleteProject(db); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(errResp)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 
