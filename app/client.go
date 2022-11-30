@@ -75,10 +75,9 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/inventory/blueprint", controllers.InventoryGetBluePrint(a.DB)).Methods("GET")
 	a.Router.Handle("/inventory/blueprint/{name}", controllers.InventoryUpdateBluePrint(a.DB)).Methods("PUT")
 	a.Router.Handle("/inventory/blueprint/{name}", controllers.InventoryDeleteBluePrint(a.DB)).Methods("DELETE")
-	//a.Router.Handle("/inventory/compareblueprintglassbox", controllers.InventoryCompareBluePrintAndGlassBox(a.DB)).Methods("GET")
 
 	// search func. to compare buleprints against glass boxes.
-	a.Router.Handle("/inventory", controllers.InventoryCompareBluePrintAndGlassBox(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory/compare", controllers.InventoryCompareBluePrintAndGlassBox(a.DB)).Methods("GET")
 
 	a.Router.Use(middlewares.Auth)
 }

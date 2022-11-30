@@ -322,7 +322,7 @@ func CompareBluePrintWithGlassBox(db *gorm.DB, urlParams url.Values) ([]Result, 
 				measurement.Width,
 				measurement.Height,
 				measurement.Thickness)
-			db.Order("bp.name").Raw(sqlQuery).Scan(&results)
+			db.Debug().Order("bp.name").Raw(sqlQuery).Scan(&results)
 		}
 	}
 

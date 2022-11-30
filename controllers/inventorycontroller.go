@@ -55,7 +55,6 @@ func InventoryGetGlassBox(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		var glassBox []models.GlassBox
 		glassBox, err := models.GetGlassBox(db, mux.Vars(r)["nameorid"])
 		if err != nil {
 			logger.Log.Error(err)
@@ -67,7 +66,7 @@ func InventoryGetGlassBox(db *gorm.DB) http.HandlerFunc {
 		logger.Log.WithFields(logrus.Fields{
 			"host": r.URL.Host,
 			"path": r.URL.Path,
-		}).Info()
+		}).Info(glassBox)
 
 		if len(glassBox) == 1 {
 			w.WriteHeader(http.StatusOK)

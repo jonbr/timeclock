@@ -99,7 +99,6 @@ func GetProject(db *gorm.DB) http.HandlerFunc {
 func CreateProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		//w.Header().Set("Access-Control-Allow-Origin", "*")
 		tokenString := r.Header.Get("Authorization")
 
 		var p models.Project
@@ -129,9 +128,8 @@ func CreateProject(db *gorm.DB) http.HandlerFunc {
 		}
 
 		logger.Log.WithFields(logrus.Fields{
-			"host":   r.URL.Host,
-			"path":   r.URL.Path,
-			"header": r.Header,
+			"host": r.URL.Host,
+			"path": r.URL.Path,
 		}).Info(p)
 
 		w.WriteHeader(http.StatusOK)
