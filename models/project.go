@@ -7,8 +7,8 @@ import (
 	"timeclock/error"
 	"timeclock/logger"
 
-	"gorm.io/gorm"
 	"github.com/gookit/goutil/dump"
+	"gorm.io/gorm"
 )
 
 type Project struct {
@@ -27,8 +27,8 @@ func (project *Project) GetProject(db *gorm.DB) ([]Project, *error.ErrorResp) {
 			return nil, error.New(error.WithDetails(err))
 		}
 	} else {
-		if result := db.Find(&projects); result.Error != nil {
-			return nil, error.New(error.WithDetails(result.Error))
+		if err := db.Find(&projects); err.Error != nil {
+			return nil, error.New(error.WithDetails(err.Error))
 		}
 	}
 
@@ -61,7 +61,7 @@ func (project *Project) UpdateProject(db *gorm.DB) *error.ErrorResp {
 
 // TODO: implement logging and returing to user error handling as is done here.
 func (project *Project) DeleteProject(db *gorm.DB) *error.ErrorResp {
-	result := db.Delete(&project);
+	result := db.Delete(&project)
 	if result.Error != nil {
 		return error.New(error.WithDetails(result.Error))
 	}
@@ -69,7 +69,7 @@ func (project *Project) DeleteProject(db *gorm.DB) *error.ErrorResp {
 		customError := fmt.Sprintf("Can't delete project with id: %s it does not exists!", strconv.FormatUint(uint64(project.ID), 10))
 		logger.Log.Error(customError)
 		return error.New(error.WithDetails(customError))
-    }
+	}
 
 	return nil
 }

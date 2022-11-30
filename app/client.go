@@ -64,13 +64,21 @@ func (a *App) InitializeRoutes() {
 	a.Router.Handle("/timeregistration/status", controllers.TimeRegistrationStatus(a.DB)).Methods("GET")
 
 	//
-	a.Router.Handle("/inventory/glassbox/{boxid}/{internalname}", controllers.InventoryGlass(a.DB)).Methods("POST")
+	a.Router.Handle("/inventory/glassbox/{boxid}/{internalname}", controllers.InventoryCreateGlassBox(a.DB)).Methods("POST")
+	a.Router.Handle("/inventory/glassbox/{nameorid}", controllers.InventoryGetGlassBox(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory/glassbox", controllers.InventoryGetGlassBox(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory/glassbox/{nameorid}", controllers.InventoryUpdateGlassBox(a.DB)).Methods("PUT")
+	a.Router.Handle("/inventory/glassbox/{nameorid}", controllers.InventoryDeleteGlassBox(a.DB)).Methods("DELETE")
+
 	a.Router.Handle("/inventory/blueprint", controllers.InventoryCreateBluePrint(a.DB)).Methods("POST")
-	a.Router.Handle("/inventory/blueprint", controllers.InventoryUpdateBluePrint(a.DB)).Methods("PUT")
-	a.Router.Handle("/inventory/blueprint", controllers.InventoryDeleteBluePrint(a.DB)).Methods("DELETE")
+	a.Router.Handle("/inventory/blueprint/{name}", controllers.InventoryGetBluePrint(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory/blueprint", controllers.InventoryGetBluePrint(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory/blueprint/{name}", controllers.InventoryUpdateBluePrint(a.DB)).Methods("PUT")
+	a.Router.Handle("/inventory/blueprint/{name}", controllers.InventoryDeleteBluePrint(a.DB)).Methods("DELETE")
+	//a.Router.Handle("/inventory/compareblueprintglassbox", controllers.InventoryCompareBluePrintAndGlassBox(a.DB)).Methods("GET")
 
 	// search func. to compare buleprints against glass boxes.
-	a.Router.Handle("/inventory/blueprint", controllers.InventoryGetBluePrint(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory", controllers.InventoryCompareBluePrintAndGlassBox(a.DB)).Methods("GET")
 
 	a.Router.Use(middlewares.Auth)
 }

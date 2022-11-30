@@ -49,7 +49,6 @@ func GetProjects(db *gorm.DB) http.HandlerFunc {
 
 func GetProject(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("---GetProject---")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		uintParams, err := utils.CastStringToUint(mux.Vars(r))
