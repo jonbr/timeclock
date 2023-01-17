@@ -25,8 +25,8 @@ type BluePrint struct {
 }
 
 type GlassBox struct {
-	BoxID        uint `gorm:"primaryKey;autoIncrement:false"`
-	InternalName string
+	BoxID        uint          `gorm:"primaryKey;autoIncrement:false"`
+	InternalName string        `gorm:"unique;size:191"`
 	Measurements []Measurement `gorm:"foreignKey:GlassBoxID"`
 }
 
@@ -78,8 +78,8 @@ func CreateGlassBox(db *gorm.DB, boxID uint, internalName string, glassBoxData [
 
 	glassBox := GlassBox{BoxID: boxID, InternalName: internalName}
 	transactionError := db.Transaction(func(tx *gorm.DB) error {
-		// create first all glasses in measurement table
-		// followd by inserting into glass_boxes table.
+		// create first all glasses in glass_boxes table
+		// followed by inserting into measurements table.
 		if err := tx.Create(&glassBox).Error; err != nil {
 			return err
 		}

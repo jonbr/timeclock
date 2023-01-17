@@ -8,7 +8,6 @@ import (
 
 	"timeclock/auth"
 	"timeclock/error"
-	apiError "timeclock/error"
 	"timeclock/logger"
 	"timeclock/models"
 
@@ -37,7 +36,7 @@ func TimeRegistrationClockIn(db *gorm.DB) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(apiError.New(apiError.WithDetails(err)))
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 		tr.UserID = 2
@@ -71,7 +70,7 @@ func TimeRegistrationClockOut(db *gorm.DB) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&tr); err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(apiError.New(apiError.WithDetails(err)))
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 		tr.UserID = u.ID
@@ -107,7 +106,7 @@ func TimeRegistrationStatus(db *gorm.DB) http.HandlerFunc {
 		isClockedIn, err := tr.ClockedInStatus(db)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(apiError.New(apiError.WithDetails(err)))
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 

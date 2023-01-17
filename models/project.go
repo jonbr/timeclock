@@ -56,7 +56,7 @@ func (project *Project) UpdateProject(db *gorm.DB) error {
 	return nil
 }
 
-// TODO: implement logging and returing to user error handling as is done here.
+// TODO: implement logging and returning to user error handling as is done here.
 func (project *Project) DeleteProject(db *gorm.DB) error {
 	result := db.Delete(&project)
 	if result.Error != nil {

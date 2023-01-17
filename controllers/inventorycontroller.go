@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"timeclock/error"
 	"timeclock/logger"
@@ -27,17 +27,17 @@ func InventoryCreateGlassBox(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		glassBoxRawData, err := ioutil.ReadAll(r.Body)
+		glassBoxRawData, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 		}
 
-		glassBoxResponse, errRespo := models.CreateGlassBox(db, boxID, vars["internalname"], glassBoxRawData)
-		if errRespo != nil {
-			logger.Log.Error(errRespo)
+		glassBoxResponse, err := models.CreateGlassBox(db, boxID, vars["internalname"], glassBoxRawData)
+		if err != nil {
+			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(errRespo)
+			json.NewEncoder(w).Encode(err)
 			return
 		}
 
