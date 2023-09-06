@@ -78,6 +78,7 @@ func (a *App) InitializeRoutes() {
 
 	// search func. to compare buleprints against glass boxes.
 	a.Router.Handle("/inventory/compare", controllers.InventoryCompareBluePrintAndGlassBox(a.DB)).Methods("GET")
+	a.Router.Handle("/inventory/findglass", controllers.InventoryFindGlassOccurrences(a.DB)).Methods("GET")
 
 	a.Router.Use(middlewares.Auth)
 }

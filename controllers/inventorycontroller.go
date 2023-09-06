@@ -9,6 +9,7 @@ import (
 	"timeclock/models"
 	"timeclock/utils"
 
+	"github.com/gookit/goutil/dump"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -55,7 +56,15 @@ func InventoryGetGlassBox(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
-		glassBox, err := models.GetGlassBox(db, mux.Vars(r)["nameorid"])
+		//queryParam := ""
+		//_, ok := r.URL.Query()["nameorid"]
+		/*if ok {
+			queryParam = r.URL.Query()["nameorid"][0]
+		}*/
+		//err := getQueryParams(r.URL, []string{"nameorid", "bar"})
+		dump.P(r.URL.Query())
+
+		glassBox, err := models.GetGlassBox(db, r.URL.Query())
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -161,7 +170,12 @@ func InventoryGetBluePrint(db *gorm.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
 		var bluePrints []models.BluePrint
-		bluePrints, err := models.GetBluePrint(db, mux.Vars(r)["name"])
+		queryParam := ""
+		_, ok := r.URL.Query()["name"]
+		if ok {
+			queryParam = r.URL.Query()["name"][0]
+		}
+		bluePrints, err := models.GetBluePrint(db, queryParam)
 		if err != nil {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -244,6 +258,28 @@ func InventoryCompareBluePrintAndGlassBox(db *gorm.DB) http.HandlerFunc {
 			logger.Log.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(err)
+			return
+		}
+
+		logger.Log.WithFields(logrus.Fields{
+			"host": r.URL.Host,
+			"path": r.URL.Path,
+		}).Info()
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(results)
+	}
+}
+
+func InventoryFindGlassOccurrences(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		results, err := models.FindGlassOccurrences(db, r.URL.Query())
+		if err != nil {
+			logger.Log.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(error.New(error.WithDetails(err)))
 			return
 		}
 

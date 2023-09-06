@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"timeclock/utils"
 
 	"github.com/gookit/goutil/dump"
 	"gorm.io/gorm"
@@ -41,9 +42,18 @@ type Measurement struct {
 }
 
 type Result struct {
-	BoxID        int
-	Name         string
+	BoxID                int
+	BluePrintName        string
+	GlassBoxInternalName string
+	Width                int `json:"width" gorm:"not null"`
+	Height               int
+	Thickness            int
+	Quantity             int
+}
+
+type glassBoxResult struct {
 	InternalName string
+	GlassBoxID   int
 	Width        int `json:"width" gorm:"not null"`
 	Height       int
 	Thickness    int
@@ -101,22 +111,32 @@ func CreateGlassBox(db *gorm.DB, boxID uint, internalName string, glassBoxData [
 }
 
 // GetGlassBox handles both get a GlassBox and get all GlassBoxes.
-func GetGlassBox(db *gorm.DB, glassBoxNameOrID string) ([]GlassBox, error) {
+// Handles query for both internal_name and box_id
+func GetGlassBox(db *gorm.DB, queryParams url.Values) ([]GlassBox, error) {
 	var glassBoxes []GlassBox
+	var allowedQueryParams = map[string]string{"localname": "internal_name", "boxid": "box_id"}
 	var err error
 
-	if glassBoxNameOrID != "" {
-		if err = db.Preload("Measurements").First(&glassBoxes, "internal_name = ?", glassBoxNameOrID).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				if err = db.Preload("Measurements").First(&glassBoxes, "box_id = ?", glassBoxNameOrID).Error; err != nil {
-					return nil, err
+	if len(queryParams) < 1 {
+		err = db.Preload("Measurements").Find(&glassBoxes).Error
+	} else if len(queryParams) == 1 {
+		for k, v := range allowedQueryParams {
+			for kk, vv := range queryParams {
+				if k == kk {
+					queryString := fmt.Sprintf("%s = ?", v)
+					fmt.Println(queryString)
+					err = db.Preload("Measurements").First(&glassBoxes, queryString, vv).Error
 				}
+				break
 			}
 		}
-	} else {
-		err = db.Preload("Measurements").Find(&glassBoxes).Error
 	}
+
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return glassBoxes, nil
+		}
+
 		return nil, err
 	}
 
@@ -124,7 +144,8 @@ func GetGlassBox(db *gorm.DB, glassBoxNameOrID string) ([]GlassBox, error) {
 }
 
 func (glassBox *GlassBox) UpdateGlassBox(db *gorm.DB, glassBoxNameOrID string) error {
-	getGlassBox, err := GetGlassBox(db, glassBoxNameOrID)
+	fmt.Printf("glassBoxNameOrID: %s\n", glassBoxNameOrID)
+	getGlassBox, err := GetGlassBox(db, nil)
 	if err != nil {
 		return err
 	}
@@ -140,7 +161,7 @@ func (glassBox *GlassBox) UpdateGlassBox(db *gorm.DB, glassBoxNameOrID string) e
 		if m.GlassBoxID == nil {
 			m.GlassBoxID = &getGlassBox[0].BoxID
 		}
-		// compare if new and existing records are identicals
+		// compare if new and existing records are identical
 		for _, mm := range getGlassBox[0].Measurements {
 			if m.Width == mm.Width && m.Height == mm.Height && m.Thickness == mm.Thickness {
 				insertRecord = false
@@ -163,7 +184,7 @@ func (glassBox *GlassBox) UpdateGlassBox(db *gorm.DB, glassBoxNameOrID string) e
 }
 
 func DeleteGlassBox(db *gorm.DB, glassBoxNameOrID string) (*GlassBox, error) {
-	glassBox, err := GetGlassBox(db, glassBoxNameOrID)
+	glassBox, err := GetGlassBox(db, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +225,7 @@ func GetBluePrint(db *gorm.DB, bluePrintName string) ([]BluePrint, error) {
 	if bluePrintName != "" {
 		if err := db.Preload("Measurements").First(&bluePrints, "name = ?", bluePrintName); err.Error != nil {
 			if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-				return nil, fmt.Errorf("Blue print with name:%s not found", bluePrintName)
+				return nil, fmt.Errorf("blue print with name:%s not found", bluePrintName)
 			}
 			return nil, err.Error
 		}
@@ -329,10 +350,34 @@ func CompareBluePrintWithGlassBox(db *gorm.DB, urlParams url.Values) ([]Result, 
 	return results, nil
 }
 
+func FindGlassOccurrences(db *gorm.DB, urlParams url.Values) ([]glassBoxResult, error) {
+	var measurement Measurement
+	var glassBoxResults []glassBoxResult
+	var err error
+
+	measurement.Width, err = utils.CastStringToInt(urlParams.Get("width"))
+	if err != nil {
+		return nil, fmt.Errorf("parameter 'width' incorrect: %s", err)
+	}
+	measurement.Height, err = utils.CastStringToInt(urlParams.Get("height"))
+	if err != nil {
+		return nil, fmt.Errorf("parameter 'height' incorrect: %s", err)
+	}
+	measurement.Thickness, err = utils.CastStringToInt(urlParams.Get("thickness"))
+	if err != nil {
+		return nil, fmt.Errorf("parameter 'thickness' incorrect: %s", err)
+	}
+
+	// TODO: see if struct GlassBox can be returned instead of current custom struct
+	db.Table("measurements").Select("glass_boxes.internal_name, measurements.glass_box_id, measurements.width, measurements.height, measurements.thickness, measurements.quantity").Joins("JOIN glass_boxes on glass_boxes.box_id = measurements.glass_box_id").Where(measurement).Where("measurements.glass_box_id IS NOT NULL").Find(&glassBoxResults)
+
+	return glassBoxResults, nil
+}
+
 // TODO: Add color validation
-func localnameValidation(localName string) (int, error) {
+func localNameValidation(localName string) (int, error) {
 	idx := strings.Index(localName, "-")
-	customError := fmt.Errorf("Localname incorrect format '%s' must be on format 'color-number'", localName)
+	customError := fmt.Errorf("localname incorrect format '%s' must be on format 'color-number'", localName)
 	if idx == -1 {
 		return -1, customError
 	}
